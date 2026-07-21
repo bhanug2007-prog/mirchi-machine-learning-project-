@@ -1,0 +1,99 @@
+{
+  "variety": "341",
+  "market": "Guntur APMC",
+  "best_model": "Lasso Regression",
+  "mae": 197.28,
+  "rmse": 523.56,
+  "r2": 0.9855,
+  "mape": 1.23,
+  "needs_scale": false,
+  "trained_at": "2026-07-20T07:20:11.104021",
+  "train_rows": 968,
+  "test_rows": 242,
+  "all_results": [
+    {
+      "model": "Lasso Regression",
+      "MAE": 197.28,
+      "RMSE": 523.56,
+      "R2": 0.9855,
+      "MAPE (%)": 1.23
+    },
+    {
+      "model": "Linear Regression",
+      "MAE": 223.22,
+      "RMSE": 529.46,
+      "R2": 0.9852,
+      "MAPE (%)": 1.42
+    },
+    {
+      "model": "Ridge Regression",
+      "MAE": 223.76,
+      "RMSE": 529.51,
+      "R2": 0.9852,
+      "MAPE (%)": 1.43
+    },
+    {
+      "model": "Random Forest",
+      "MAE": 416.34,
+      "RMSE": 704.74,
+      "R2": 0.9738,
+      "MAPE (%)": 3.02
+    },
+    {
+      "model": "LightGBM",
+      "MAE": 417.31,
+      "RMSE": 670.93,
+      "R2": 0.9763,
+      "MAPE (%)": 2.75
+    },
+    {
+      "model": "XGBoost",
+      "MAE": 430.34,
+      "RMSE": 728.89,
+      "R2": 0.972,
+      "MAPE (%)": 3.02
+    },
+    {
+      "model": "Gradient Boosting",
+      "MAE": 443.28,
+      "RMSE": 731.29,
+      "R2": 0.9718,
+      "MAPE (%)": 3.17
+    },
+    {
+      "model": "Extra Trees",
+      "MAE": 504.7,
+      "RMSE": 769.59,
+      "R2": 0.9688,
+      "MAPE (%)": 3.47
+    },
+    {
+      "model": "Decision Tree",
+      "MAE": 643.0,
+      "RMSE": 984.12,
+      "R2": 0.9489,
+      "MAPE (%)": 4.27
+    },
+    {
+      "model": "PyTorch MLP",
+      "MAE": 701.4,
+      "RMSE": 1029.56,
+      "R2": 0.9441,
+      "MAPE (%)": 5.46
+    },
+    {
+      "model": "SVR",
+      "MAE": 891.29,
+      "RMSE": 1421.32,
+      "R2": 0.8935,
+      "MAPE (%)": 5.98
+    },
+    {
+      "model": "KNN",
+      "MAE": 1265.14,
+      "RMSE": 1647.76,
+      "R2": 0.8568,
+      "MAPE (%)": 9.2
+    }
+  ]
+}

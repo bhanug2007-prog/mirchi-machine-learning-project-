@@ -1,0 +1,99 @@
+{
+  "variety": "Teja S17",
+  "market": "Guntur APMC",
+  "best_model": "Lasso Regression",
+  "mae": 158.41,
+  "rmse": 329.61,
+  "r2": 0.9863,
+  "mape": 1.06,
+  "needs_scale": false,
+  "trained_at": "2026-07-20T07:17:34.032277",
+  "train_rows": 968,
+  "test_rows": 242,
+  "all_results": [
+    {
+      "model": "Lasso Regression",
+      "MAE": 158.41,
+      "RMSE": 329.61,
+      "R2": 0.9863,
+      "MAPE (%)": 1.06
+    },
+    {
+      "model": "Ridge Regression",
+      "MAE": 184.95,
+      "RMSE": 348.47,
+      "R2": 0.9847,
+      "MAPE (%)": 1.26
+    },
+    {
+      "model": "Linear Regression",
+      "MAE": 185.73,
+      "RMSE": 348.7,
+      "R2": 0.9847,
+      "MAPE (%)": 1.27
+    },
+    {
+      "model": "Gradient Boosting",
+      "MAE": 259.42,
+      "RMSE": 397.34,
+      "R2": 0.9801,
+      "MAPE (%)": 1.82
+    },
+    {
+      "model": "Random Forest",
+      "MAE": 266.42,
+      "RMSE": 410.9,
+      "R2": 0.9788,
+      "MAPE (%)": 1.83
+    },
+    {
+      "model": "Extra Trees",
+      "MAE": 284.2,
+      "RMSE": 437.17,
+      "R2": 0.976,
+      "MAPE (%)": 1.95
+    },
+    {
+      "model": "LightGBM",
+      "MAE": 316.73,
+      "RMSE": 472.78,
+      "R2": 0.9719,
+      "MAPE (%)": 2.23
+    },
+    {
+      "model": "XGBoost",
+      "MAE": 343.48,
+      "RMSE": 506.95,
+      "R2": 0.9677,
+      "MAPE (%)": 2.4
+    },
+    {
+      "model": "Decision Tree",
+      "MAE": 347.15,
+      "RMSE": 507.2,
+      "R2": 0.9676,
+      "MAPE (%)": 2.34
+    },
+    {
+      "model": "PyTorch MLP",
+      "MAE": 478.44,
+      "RMSE": 619.98,
+      "R2": 0.9517,
+      "MAPE (%)": 3.45
+    },
+    {
+      "model": "SVR",
+      "MAE": 488.94,
+      "RMSE": 636.13,
+      "R2": 0.9491,
+      "MAPE (%)": 3.64
+    },
+    {
+      "model": "KNN",
+      "MAE": 794.96,
+      "RMSE": 976.3,
+      "R2": 0.8801,
+      "MAPE (%)": 5.7
+    }
+  ]
+}

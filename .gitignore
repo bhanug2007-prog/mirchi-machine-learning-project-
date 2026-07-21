@@ -1,0 +1,27 @@
+# Node dependencies
+node_modules/
+
+# Production builds
+dist/
+build/
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local environments / API configuration
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE configurations
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
