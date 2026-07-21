@@ -7,15 +7,17 @@ Real-time Mirchi Price Intelligence for Andhra Pradesh farmers.
 ```
 mirchimandi/
 ├── scripts/
-│   ├── 01_upload_to_supabase.py   ← Step 1: Load CSV to Supabase
-│   └── 02_train_models.py         ← Step 2: Train 11 ML models
+│   ├── 01_sync_google_sheets.py   ← Step 1: Sync historical data from Google Sheet API
+│   ├── 02_train_models.py         ← Step 2: Train 11 ML models
+│   ├── daily_auto_sync.py         ← Daily automation script
+│   └── 01_upload_to_supabase.py   ← (Optional) Upload manual agmarknet CSVs to Supabase
 ├── backend/
 │   ├── main.py                    ← FastAPI backend (all API endpoints)
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/App.jsx                ← React frontend (full UI)
 │   └── package.json
-└── csv_data/                      ← Put your agmarknet CSVs here
+└── csv_data/                      ← (Optional) Put fallback agmarknet CSVs here
 ```
 
 ---
@@ -32,12 +34,20 @@ Supabase → Settings → Database → Connection String → URI (Transaction po
 
 ---
 
-### Step 2 — Upload CSV data to Supabase
-```bash
-# Put your agmarknet CSVs in ./csv_data/ folder
-mkdir csv_data
-# Copy your downloaded CSV here
+### Step 2 — Ingest prices to Supabase
 
+The primary data source is Guntur Mirchi's price tracking spreadsheet. We use an automated Google Sheets API scraper to fetch both historical and daily prices for real AP varieties (Teja S17, 334 Sannam, Byadgi, 341, DD Deluxe, and Armoor).
+
+Run the Google Sheets synchronization script to fetch and populate your Supabase database:
+```bash
+pip install requests psycopg2-binary
+python scripts/01_sync_google_sheets.py
+```
+
+*(Optional Fallback)*: If you want to load manual CSV reports downloaded from agmarknet.gov.in:
+```bash
+mkdir csv_data
+# Copy your downloaded CSV files into ./csv_data/
 pip install pandas psycopg2-binary
 python scripts/01_upload_to_supabase.py
 ```
@@ -127,13 +137,16 @@ Open: http://localhost:5173
 
 ## Daily Data Update
 
-Every morning from your laptop (Indian IP):
-1. Go to agmarknet.gov.in → Daily Price Arrival Report
-2. Download today's CSV for Andhra Pradesh, Dry Chillies
-3. Put in csv_data/ folder
-4. Run: `python scripts/01_upload_to_supabase.py`
+Instead of manually downloading CSV files every day, the project uses a highly efficient scraper that queries the Guntur Mirchi Google Sheets API directly:
 
-Done. New data live on website instantly.
+1. **Run the Automated Sync Script:**
+   ```bash
+   python scripts/daily_auto_sync.py
+   ```
+2. **Details:**
+   - Updates all variety-specific tables in under 3 seconds.
+   - Requires no browser, Selenium, or proxy setup.
+   - Can easily be set up on a server cron job or triggered from a backend administrative interface.
 
 ---
 
