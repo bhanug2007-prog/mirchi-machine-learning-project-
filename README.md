@@ -17,7 +17,7 @@ I built MirchiMandi to make that comparison concrete. A Python pipeline imports 
 - [Demonstration Flow](#demonstration-flow)
 - [Architecture](#architecture)
 - [Technology Stack](#technology-stack)
-- [Data and Model Evaluation](#data-and-model-evaluation)
+- [Machine Learning: Price Forecasting and Model Selection](#machine-learning-price-forecasting-and-model-selection)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [Validation and Testing](#validation-and-testing)
@@ -90,19 +90,31 @@ The backend reads price records and saved model artifacts, builds forecasts, and
 | Machine learning | scikit-learn, XGBoost, LightGBM, PyTorch, joblib | Regression experiments, model selection, and saved inference artifacts |
 | Location lookup | OpenStreetMap Nominatim and a distance fallback | Estimates used by the transport calculator |
 
-## Data and Model Evaluation
+## Machine Learning: Price Forecasting and Model Selection
 
-- **Data ingestion.** The Sheets scripts import Guntur Mirchi price records. The separate CSV importer can load the AGMARKNET price and arrival reports in [`csv_data/`](csv_data/). A daily sync script is available for scheduling.
-- **Features.** The training code uses lagged prices, rolling statistics, price changes, calendar features, and lagged arrival data where available.
-- **Comparison.** The trainer defines 12 candidate regressors, including linear baselines, tree ensembles, XGBoost, LightGBM, and a PyTorch MLP. It uses the earliest 80% of observations for training and the final 20% for evaluation. Candidates are ranked by mean absolute error (MAE). The metadata also records RMSE, R², and MAPE.
-- **Inference.** FastAPI loads the saved model and feature list for the requested variety. When a trained model is unavailable, the forecast endpoint can use a moving-average fallback if price history is available.
+### What ML predicts and why it matters
 
-| Variety | Selected model in the saved run | MAE per quintal |
+The model predicts **red-chilli prices in rupees per quintal** from historical market data. Today's quote is enough to compare a broker offer with a mandi sale after transport. Deciding whether to **pay for storage and sell later** requires an estimate of future prices. That is where ML helps.
+
+### How I built and evaluated the models
+
+1. **Collect the price history.** Import variety-level prices from a Guntur Mirchi spreadsheet and AGMARKNET price and arrival reports into PostgreSQL.
+2. **Build features from past observations.** Use lagged prices, rolling price statistics, recent price changes, calendar features, and lagged market arrivals where available.
+3. **Compare 12 regressors on later dates.** Train on the earliest 80% of observations and evaluate on the final 20% without shuffling. Candidates include Linear Regression, Ridge, Lasso, Decision Tree, KNN, SVR, Random Forest, Extra Trees, Gradient Boosting, XGBoost, LightGBM, and a PyTorch multilayer perceptron (MLP).
+4. **Select by variety.** Save the model with the lowest mean absolute error (MAE) for each trained variety, along with its feature list and evaluation metadata. The saved results also include RMSE, R², and MAPE.
+
+| Variety | Selected model in the saved run | Holdout MAE |
 | --- | --- | --- |
-| Teja S17 | Lasso Regression | ₹158.41 |
-| Red | XGBoost | ₹466.71 |
+| Teja S17 | Lasso Regression | ₹158.41 per quintal |
+| Red | XGBoost | ₹466.71 per quintal |
 
-These are historical holdout results from the [saved Teja S17 metadata](saved_models/meta_Teja_S17.json) and [saved Red metadata](saved_models/meta_Red.json). They are specific to those runs and do not establish seven-day forecast accuracy or gains for farmers.
+The selected model varied by chilli variety. The PyTorch MLP was evaluated alongside the classical models. These results describe the historical holdout used for model selection and do not establish seven-day forecast accuracy. [Training code](scripts/02_train_models.py) · [Teja S17 results](saved_models/meta_Teja_S17.json) · [Red results](saved_models/meta_Red.json)
+
+### How the forecast becomes a recommendation
+
+FastAPI loads the model for the selected variety and serves a **seven-day price forecast** to the English and Telugu React dashboard. It can use a moving average when a trained model is unavailable and price history is available. The sell-or-wait calculation subtracts storage costs from the projected change in sale proceeds.
+
+For example, a projected rise of **₹100 per quintal after four days** would fall short of the app's assumed **₹120 per quintal storage cost** for those four days. For **50 quintals**, waiting would leave the farmer an estimated **₹1,000 worse off** than selling at the current price. The forecast supplies the future price estimate, and the cost calculation explains the recommendation.
 
 ## Project Structure
 
