@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import LandingPage from "./components/landing/LandingPage";
 
-const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const defaultApi = import.meta.env.DEV ? "http://127.0.0.1:8000" : "";
+const API = (import.meta.env.VITE_API_URL ?? defaultApi).replace(/\/$/, "");
 
 // ─── TRANSLATIONS ──────────────────────────────────────
 const T = {
@@ -987,20 +989,23 @@ function MLModelsCard({ variety, t }) {
 function AdminDashboard({ passcode, setPasscode, t }) {
   const [unverified, setUnverified] = useState([]);
   const [authError, setAuthError] = useState(null);
+  const [authenticated, setAuthenticated] = useState(false);
+  const adminHeaders = { "X-Admin-Passcode": passcode };
   const [syncStatus, setSyncStatus] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const fetchUnverified = async () => {
     if (!passcode) return;
     try {
-      const r = await fetch(`${API}/api/admin/unverified?passcode=${passcode}`);
-      if (r.status === 401) {
-        setAuthError("Invalid passcode");
+      const r = await fetch(`${API}/api/admin/unverified`, { headers: adminHeaders });
+      if (!r.ok) {
+        setAuthError(r.status === 401 ? "Invalid passcode" : "Failed to fetch unverified prices");
         setUnverified([]);
         return;
       }
       const d = await r.json();
       setUnverified(d);
+      setAuthenticated(true);
       setAuthError(null);
     } catch (e) {
       setAuthError("Failed to fetch unverified prices");
@@ -1008,14 +1013,14 @@ function AdminDashboard({ passcode, setPasscode, t }) {
   };
 
   useEffect(() => {
-    if (passcode === "1234") {
+    if (passcode) {
       fetchUnverified();
     }
   }, [passcode]);
 
   const verifyPrice = async (id) => {
     try {
-      const r = await fetch(`${API}/api/admin/verify/${id}?passcode=${passcode}`, { method: "POST" });
+      const r = await fetch(`${API}/api/admin/verify/${id}`, { method: "POST", headers: adminHeaders });
       if (r.ok) {
         setUnverified(unverified.filter(u => u.id !== id));
       }
@@ -1024,7 +1029,7 @@ function AdminDashboard({ passcode, setPasscode, t }) {
 
   const deletePrice = async (id) => {
     try {
-      const r = await fetch(`${API}/api/admin/delete/${id}?passcode=${passcode}`, { method: "DELETE" });
+      const r = await fetch(`${API}/api/admin/delete/${id}`, { method: "DELETE", headers: adminHeaders });
       if (r.ok) {
         setUnverified(unverified.filter(u => u.id !== id));
       }
@@ -1035,7 +1040,7 @@ function AdminDashboard({ passcode, setPasscode, t }) {
     setLoading(true);
     setSyncStatus("Triggering database sync...");
     try {
-      const r = await fetch(`${API}/api/admin/trigger-scraper?passcode=${passcode}`, { method: "POST" });
+      const r = await fetch(`${API}/api/admin/trigger-scraper`, { method: "POST", headers: adminHeaders });
       const d = await r.json();
       if (d.success) {
         setSyncStatus("Sync started in background! Check back in a few seconds.");
@@ -1048,7 +1053,7 @@ function AdminDashboard({ passcode, setPasscode, t }) {
     setLoading(false);
   };
 
-  if (passcode !== "1234") {
+  if (!authenticated) {
     return (
       <Card className="max-w-md mx-auto">
         <p className="text-xs text-slate-500 uppercase tracking-widest font-cyber font-bold mb-1">🔒 Access Control</p>
@@ -1164,7 +1169,8 @@ function AdminDashboard({ passcode, setPasscode, t }) {
 
 // ─── MAIN APP ──────────────────────────────────────────
 export default function App() {
-  const [lang,    setLang]    = useState(localStorage.getItem("mm_lang") || null);
+  const [lang,    setLang]    = useState(localStorage.getItem("mm_lang") || "en");
+  const [view,    setView]    = useState("landing"); // "landing" | "dashboard"
   const [variety, setVariety] = useState("Teja S17"); // Default variety
   const [market,  setMarket]  = useState("Guntur APMC");
   const [quintals,setQuintals]= useState(50);
@@ -1189,9 +1195,22 @@ export default function App() {
       .catch(() => {});
   }, [market, tab]);
 
+  if (view === "landing") {
+    return (
+      <LandingPage
+        onLaunchDashboard={() => setView("dashboard")}
+        currentLang={lang || "en"}
+        onToggleLang={() => {
+          const next = (lang || "en") === "te" ? "en" : "te";
+          selectLang(next);
+        }}
+      />
+    );
+  }
+
   if (!lang) return <LangSelect onSelect={selectLang} />;
 
-  const t = T[lang];
+  const t = T[lang || "en"];
 
   const VARIETIES = Array.from(new Set([
     "Teja S17", "334 Sannam", "Byadgi", "341", "DD Deluxe", "Armoor",
@@ -1233,6 +1252,15 @@ export default function App() {
               <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-bold mt-0.5">AP Price Intel</span>
             </div>
           </div>
+
+          {/* 3D Landing Page Switcher */}
+          <button
+            onClick={() => setView("landing")}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#E63946] to-[#C1121F] shadow-md shadow-[#E63946]/20 hover:scale-[1.02] active:scale-[0.98] transition-all border border-[#FF6B6B]/30"
+          >
+            <span>🌶️</span>
+            <span>{lang === "te" ? "3D ల్యాండింగ్ పేజీ" : "← 3D Landing Page"}</span>
+          </button>
 
           {/* Desktop Nav Items */}
           <nav className="space-y-2">
@@ -1285,7 +1313,14 @@ export default function App() {
           <span className="font-cyber font-black text-lg text-white tracking-wider uppercase">{t.appName}</span>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setView("landing")}
+            className="text-[11px] font-bold rounded-full px-2.5 py-1 text-white bg-[#E63946] flex items-center gap-1 shadow-sm border border-[#FF6B6B]/30"
+          >
+            <span>🌶️</span>
+            <span>Landing</span>
+          </button>
           <button 
             onClick={() => selectLang(lang === "en" ? "te" : "en")}
             className="text-xs font-cyber font-bold border border-[#1E293B] rounded-full px-3 py-1.5 text-slate-300 hover:text-white bg-slate-900 transition"

@@ -25,9 +25,9 @@ mirchimandi/
 ## Step-by-Step Setup
 
 ### Step 1 — Add your Supabase DB URL
-In all 3 files, replace this line:
-```python
-DB_URL = "postgresql://postgres.YOUR_PROJECT:YOUR_PASSWORD@..."
+Set `DB_URL` in your shell before running the API, data sync, or training scripts. For example, in PowerShell:
+```powershell
+$env:DB_URL = "<Supabase connection URI>"
 ```
 With your real Supabase connection string from:
 Supabase → Settings → Database → Connection String → URI (Transaction pooler)
@@ -75,6 +75,30 @@ This trains 11 models and shows a comparison table:
 
 Best model is saved automatically.
 
+### Offline forecasting benchmark
+
+Run from the project root with pandas and scikit-learn installed. The benchmark reads local AGMARKNET CSVs and requires no database connection.
+
+```bash
+python scripts/backtest.py
+python scripts/backtest.py --variety Red
+```
+
+The script evaluates Guntur APMC dry chilli modal prices (FAQ grade by default). It uses the final 30% of eligible observation dates as forecast origins. At each origin it refits a separate Ridge model for each of the next seven calendar days using only prices available by that date. Each horizon reports mean absolute error in rupees per quintal for Ridge and a last-observed-price baseline on the same dates.
+
+The sell-or-wait simulation uses ₹30 per quintal per calendar day for storage and recommends waiting if the expected gain exceeds ₹200 per quintal. Both inputs can be changed with `--storage-cost` and `--minimum-gain`. The report compares scored decisions with selling immediately and counts wait signals without an observed sale price separately. The benchmark evaluates a separate Ridge candidate. The live API serves the existing forecasting system.
+
+On the bundled reports, each variety has 141 observations from November 2025 through July 2026. The last-price baseline had lower MAE at all seven horizons for both varieties. Selected results are below (₹/quintal).
+
+| Variety | Horizon | Scored dates | Last price MAE | Ridge MAE |
+|---|---:|---:|---:|---:|
+| Red New | 1 day | 31 | 38.71 | 92.62 |
+| Red New | 7 days | 30 | 213.33 | 271.82 |
+| Red | 1 day | 31 | 64.52 | 105.19 |
+| Red | 7 days | 30 | 250.00 | 345.86 |
+
+The simulation issued one wait signal for Red New, whose target date lacked a reported price, and no wait signals for Red. These runs provide zero scored wait outcomes.
+
 ---
 
 ### Step 4 — Run the backend
@@ -120,18 +144,14 @@ Open: http://localhost:5173
 
 ## Deployment
 
-### Backend → Render.com (free)
-1. Push backend/ to GitHub
-2. New Web Service on Render → connect repo
-3. Build command: `pip install -r requirements.txt`
-4. Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-5. Add environment variable: `DB_URL = your_supabase_url`
+### Render
 
-### Frontend → Vercel (free)
-1. Push frontend/ to GitHub
-2. New project on Vercel → connect repo
-3. Add environment variable: `VITE_API_URL = your_render_backend_url`
-4. Deploy
+The repository-root `render.yaml` defines one Docker web service. FastAPI serves both the built React frontend and `/api`, so the production build uses relative API URLs.
+
+1. Rotate the previously committed Supabase password and obtain the new pooler connection URI. Populate Supabase with the existing sync script if needed.
+2. Push the project files and connect the repository in **Render → New → Blueprint**.
+3. Enter the new URI for `DB_URL` in Render. The Blueprint generates `ADMIN_PASSCODE`, which you can retrieve from the service's Environment page to use in the admin UI.
+4. After the deploy finishes, open the generated URL and check `/api/health` for the latest database date. Open the market dashboard and verify a price lookup and a forecast before sharing the URL.
 
 ---
 

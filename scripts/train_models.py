@@ -85,7 +85,7 @@ class PyTorchMLPRegressor(BaseEstimator, RegressorMixin):
             preds = self.model(X_tensor).squeeze(1).numpy()
         return preds
 
-DB_URL     = "postgresql://postgres.akdzzsfhvcuvzpjxmscs:8pohdOKVFAZHJ0VJ@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres"
+DB_URL = os.environ.get("DB_URL")
 
 MODELS_DIR = "./saved_models"
 os.makedirs(MODELS_DIR, exist_ok=True)

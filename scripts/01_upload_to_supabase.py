@@ -12,7 +12,7 @@ import psycopg2
 from psycopg2.extras import execute_values
 import glob, os
 
-DB_URL = "postgresql://postgres.akdzzsfhvcuvzpjxmscs:8pohdOKVFAZHJ0VJ@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres"
+DB_URL = os.environ.get("DB_URL")
 def get_conn():
     return psycopg2.connect(DB_URL)
 

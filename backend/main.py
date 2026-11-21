@@ -6,10 +6,13 @@ Run: uvicorn main:app --reload --port 8000
 All API endpoints for MirchiMandi website.
 """
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Optional
+from pathlib import Path
+from secrets import compare_digest
 import psycopg2, psycopg2.extras
 import pandas as pd
 import numpy as np
@@ -33,8 +36,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DB_URL     = "postgresql://postgres.akdzzsfhvcuvzpjxmscs:8pohdOKVFAZHJ0VJ@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres"
-MODELS_DIR = "../saved_models"
+DB_URL = os.environ.get("DB_URL")
+ADMIN_PASSCODE = os.environ.get("ADMIN_PASSCODE")
+MODELS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../saved_models"))
+LOCAL_DB_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "mirchimandi.duckdb"))
 
 # Add scripts directory to path to import PyTorchMLPRegressor for unpickling
 import sys
@@ -42,27 +47,95 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../s
 from train_models import PyTorchMLPRegressor
 
 # ─────────────────────────────────────────────────────
-# DB HELPER
+# DB HELPER (Dual Postgres / Local DuckDB fallback)
 # ─────────────────────────────────────────────────────
+_duckdb_conn = None
+
+def get_duckdb_conn():
+    global _duckdb_conn
+    if _duckdb_conn is None:
+        import duckdb
+        _duckdb_conn = duckdb.connect(LOCAL_DB_FILE)
+        _duckdb_conn.execute("CREATE OR REPLACE MACRO to_char(d, fmt) AS strftime(d, '%b');")
+    return _duckdb_conn
+
+USE_LOCAL_DB = False
+try:
+    if not DB_URL:
+        raise RuntimeError("DB_URL is unset")
+    _test_conn = psycopg2.connect(DB_URL, connect_timeout=5)
+    _test_conn.close()
+except Exception:
+    if os.environ.get("REQUIRE_REMOTE_DB") == "1":
+        raise RuntimeError("Cannot connect to PostgreSQL. Check DB_URL.") from None
+    USE_LOCAL_DB = True
+    print(f"⚠️  Remote database unavailable. Using local embedded database: {LOCAL_DB_FILE}")
+
 def get_conn():
     return psycopg2.connect(DB_URL, cursor_factory=psycopg2.extras.RealDictCursor)
 
 def query(sql, params=None):
-    conn = get_conn()
-    cur  = conn.cursor()
-    cur.execute(sql, params or ())
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-    return [dict(r) for r in rows]
+    if not USE_LOCAL_DB:
+        try:
+            conn = get_conn()
+            cur  = conn.cursor()
+            cur.execute(sql, params or ())
+            rows = cur.fetchall()
+            cur.close()
+            conn.close()
+            return [dict(r) for r in rows]
+        except Exception as e:
+            print(f"PostgreSQL query failed, trying local DB: {e}")
+
+    # Local DuckDB
+    dconn = get_duckdb_conn()
+    processed_sql = sql
+    if "INTERVAL '%s days'" in processed_sql:
+        processed_sql = processed_sql.replace("INTERVAL '%s days'", "(? * INTERVAL '1 day')")
+    processed_sql = processed_sql.replace('%s', '?')
+    
+    clean_params = []
+    for p in (params or []):
+        if hasattr(p, 'default'):
+            clean_params.append(p.default)
+        else:
+            clean_params.append(p)
+
+    res = dconn.execute(processed_sql, clean_params).df()
+    rows = res.to_dict(orient='records')
+    for r in rows:
+        for k, v in list(r.items()):
+            if hasattr(v, 'strftime'):
+                r[k] = v.strftime('%Y-%m-%d')
+            elif isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+                r[k] = None
+    return rows
 
 def execute(sql, params=None):
-    conn = get_conn()
-    cur  = conn.cursor()
-    cur.execute(sql, params or ())
-    conn.commit()
-    cur.close()
-    conn.close()
+    if not USE_LOCAL_DB:
+        try:
+            conn = get_conn()
+            cur  = conn.cursor()
+            cur.execute(sql, params or ())
+            conn.commit()
+            cur.close()
+            conn.close()
+            return
+        except Exception as e:
+            print(f"PostgreSQL execute failed, writing to local DB: {e}")
+
+    dconn = get_duckdb_conn()
+    processed_sql = sql
+    if "INTERVAL '%s days'" in processed_sql:
+        processed_sql = processed_sql.replace("INTERVAL '%s days'", "(? * INTERVAL '1 day')")
+    processed_sql = processed_sql.replace('%s', '?')
+    clean_params = []
+    for p in (params or []):
+        if hasattr(p, 'default'):
+            clean_params.append(p.default)
+        else:
+            clean_params.append(p)
+    dconn.execute(processed_sql, clean_params)
 
 
 # ─────────────────────────────────────────────────────
@@ -89,9 +162,6 @@ def load_model(variety):
 # ENDPOINTS
 # ─────────────────────────────────────────────────────
 
-@app.get("/")
-def root():
-    return {"message": "MirchiMandi API is running 🌶", "version": "1.0.0"}
 
 
 # ── 1. GET TODAY'S PRICE ─────────────────────────────
@@ -172,6 +242,19 @@ def get_price_history(
         ORDER BY arrival_date ASC
     """, (market, variety, days))
 
+    if not rows:
+        rows = query("""
+            SELECT arrival_date, modal_price, min_price, max_price, arrival_qty
+            FROM (
+                SELECT arrival_date, modal_price, min_price, max_price, arrival_qty
+                FROM mirchi_prices
+                WHERE market = %s AND variety = %s
+                ORDER BY arrival_date DESC
+                LIMIT %s
+            ) sub
+            ORDER BY arrival_date ASC
+        """, (market, variety, days))
+
     return {
         "market":  market,
         "variety": variety,
@@ -233,7 +316,7 @@ def get_forecast(
 
     # Load recent data and build features - aggregate grades by date to avoid duplicates
     raw_rows = query("""
-        SELECT arrival_date::text, 
+        SELECT arrival_date::text as arrival_date, 
                AVG(modal_price) as modal_price,
                AVG(min_price) as min_price,
                AVG(max_price) as max_price,
@@ -309,30 +392,13 @@ def get_recommendation(
     # Storage cost = approx Rs 30 per quintal per day (cold storage + transport risk)
     STORAGE_COST_PER_DAY = 30
 
-    best_action = "SELL_TODAY"
-    best_gain   = 0
-    best_day    = 0
-    best_price  = today_price
-
-    for day_idx, pred_price in enumerate(predictions, 1):
-        storage_cost   = day_idx * STORAGE_COST_PER_DAY
-        net_gain_per_q = pred_price - today_price - storage_cost
-        if net_gain_per_q > best_gain and net_gain_per_q > 200:
-            best_gain   = net_gain_per_q
-            best_day    = day_idx
-            best_price  = pred_price
-            best_action = "WAIT"
-
-    # Find the maximum predicted price in the next 7 days for explanation math
-    max_forecast_price = float(max(predictions))
-    max_forecast_day = predictions.index(max_forecast_price) + 1
-    price_increase = max_forecast_price - today_price
-    max_storage_cost = max_forecast_day * STORAGE_COST_PER_DAY
-    
-    # Crop scale calculations
-    total_price_gain = price_increase * quintals
-    total_storage_cost = max_storage_cost * quintals
-    total_net_loss = total_storage_cost - total_price_gain
+    minimum_gain_per_quintal = 200
+    best_day, best_price = max(
+        enumerate(predictions, 1),
+        key=lambda entry: entry[1] - entry[0] * STORAGE_COST_PER_DAY,
+    )
+    best_gain = best_price - today_price - best_day * STORAGE_COST_PER_DAY
+    best_action = "WAIT" if best_gain > minimum_gain_per_quintal else "SELL_TODAY"
 
     # Wait scale calculations
     wait_storage_cost = best_day * STORAGE_COST_PER_DAY * quintals
@@ -347,17 +413,15 @@ def get_recommendation(
         expected_p = best_price
     else:
         # SELL_TODAY
-        expected_p = max_forecast_price
-        if price_increase > 0:
-            reason_en = f"Storing {quintals:,.0f} qtl for {max_forecast_day} days costs ₹{total_storage_cost:,.0f}, whereas your price gain is only ₹{total_price_gain:,.0f}. Selling today avoids a net loss of ₹{total_net_loss:,.0f}."
-            reason_te = f"{quintals:,.0f} క్వింటాళ్లను {max_forecast_day} రోజులు నిల్వ చేయడానికి ₹{total_storage_cost:,.0f} ఖర్చవుతుంది, కానీ ధర ద్వారా వచ్చే లాభం కేవలం ₹{total_price_gain:,.0f}. ఈరోజే అమ్మడం ద్వారా ₹{total_net_loss:,.0f} నష్టాన్ని నివారించవచ్చు."
-            rec_en = "Sell today (Save on storage)"
-            rec_te = "ఈరోజే అమ్మండి (స్టోరేజ్ ఖర్చులు ఆదా చేసుకోండి)"
+        expected_p = max(predictions)
+        if best_gain > 0:
+            reason_en = f"The best projected gain after storage is ₹{best_gain:,.0f} per quintal. Waiting requires a projected gain above ₹{minimum_gain_per_quintal:,.0f} per quintal."
+            reason_te = f"నిల్వ ఖర్చు తీసివేసిన తర్వాత అంచనా లాభం క్వింటాలుకు ₹{best_gain:,.0f}. వేచి ఉండాలంటే అంచనా లాభం క్వింటాలుకు ₹{minimum_gain_per_quintal:,.0f} కంటే ఎక్కువ ఉండాలి."
         else:
-            reason_en = "Prices are expected to drop or stay flat over the next 7 days. Sell today to avoid storage losses."
-            reason_te = "రాబోయే 7 రోజుల్లో ధరలు తగ్గే అవకాశం ఉంది లేదా స్థిరంగా ఉంటాయి. నష్టాలను నివారించడానికి ఈరోజే అమ్మండి."
-            rec_en = "Sell today"
-            rec_te = "ఈరోజే అమ్మండి"
+            reason_en = "After storage costs, waiting is projected to earn the same or less than selling today."
+            reason_te = "నిల్వ ఖర్చులు తీసివేసిన తర్వాత, వేచి ఉంటే ఈరోజు అమ్మినంత లేదా అంతకంటే తక్కువ ఆదాయం వస్తుందని అంచనా."
+        rec_en = "Sell today"
+        rec_te = "ఈరోజే అమ్మండి"
 
     # Broker comparison
     broker_loss = None
@@ -368,7 +432,7 @@ def get_recommendation(
 
     return {
         "action":              best_action,
-        "wait_days":           best_day,
+        "wait_days":           best_day if best_action == "WAIT" else 0,
         "today_price":         today_price,
         "expected_price":      round(expected_p, 0),
         "gain_per_quintal":    round(best_gain, 0) if best_action == "WAIT" else 0,
@@ -776,8 +840,8 @@ def upvote_price(price_id: int):
 
 # ── 11b. ADMIN CONTROL ENDPOINTS ──────────────────────
 @app.get("/api/admin/unverified")
-def get_unverified_prices(passcode: str = Query(...)):
-    if passcode != "1234":
+def get_unverified_prices(passcode: str = Header("", alias="X-Admin-Passcode")):
+    if not ADMIN_PASSCODE or not compare_digest(passcode.encode(), ADMIN_PASSCODE.encode()):
         raise HTTPException(401, "Invalid passcode")
     rows = query("""
         SELECT id, arrival_date, market, variety, modal_price, reporter_name, notes, submitted_at
@@ -792,24 +856,24 @@ def get_unverified_prices(passcode: str = Query(...)):
     return rows
 
 @app.post("/api/admin/verify/{price_id}")
-def verify_price(price_id: int, passcode: str = Query(...)):
-    if passcode != "1234":
+def verify_price(price_id: int, passcode: str = Header("", alias="X-Admin-Passcode")):
+    if not ADMIN_PASSCODE or not compare_digest(passcode.encode(), ADMIN_PASSCODE.encode()):
         raise HTTPException(401, "Invalid passcode")
     execute("UPDATE user_variety_prices SET is_verified = TRUE WHERE id = %s", (price_id,))
     return {"success": True, "message": "Price verified successfully!"}
 
 @app.delete("/api/admin/delete/{price_id}")
-def delete_price(price_id: int, passcode: str = Query(...)):
-    if passcode != "1234":
+def delete_price(price_id: int, passcode: str = Header("", alias="X-Admin-Passcode")):
+    if not ADMIN_PASSCODE or not compare_digest(passcode.encode(), ADMIN_PASSCODE.encode()):
         raise HTTPException(401, "Invalid passcode")
     execute("DELETE FROM user_variety_prices WHERE id = %s", (price_id,))
     return {"success": True, "message": "Price deleted successfully!"}
 
 @app.post("/api/admin/trigger-scraper")
-def trigger_scraper(passcode: str = Query(...)):
+def trigger_scraper(passcode: str = Header("", alias="X-Admin-Passcode")):
     import sys
     import subprocess
-    if passcode != "1234":
+    if not ADMIN_PASSCODE or not compare_digest(passcode.encode(), ADMIN_PASSCODE.encode()):
         raise HTTPException(401, "Invalid passcode")
     try:
         python_exec = sys.executable
@@ -855,5 +919,14 @@ def health():
             "latest_data": str(rows[0]['latest']) if rows else None,
             "timestamp": datetime.now().isoformat()
         }
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+    except Exception:
+        raise HTTPException(503, "Market database unavailable") from None
+
+
+frontend_dist = Path(__file__).resolve().parents[1] / "frontend" / "dist"
+if (frontend_dist / "index.html").is_file():
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+else:
+    @app.get("/")
+    def root():
+        return {"message": "MirchiMandi API is running", "version": "1.0.0"}

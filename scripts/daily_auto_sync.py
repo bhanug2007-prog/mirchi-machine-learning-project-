@@ -13,9 +13,10 @@ import requests
 import psycopg2
 from psycopg2.extras import execute_values
 from datetime import datetime, date
+import os
 import sys
 
-DB_URL = "postgresql://postgres.akdzzsfhvcuvzpjxmscs:8pohdOKVFAZHJ0VJ@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres"
+DB_URL = os.environ.get("DB_URL")
 SPREADSHEET_ID = '1dwhlEIQ_H0NcAIT-SSg1sM_ZpsT2KZNUvc2fqWI9lYU'
 API_KEY = 'AIzaSyBshQgbcousVir0__rUic0Bj1Ei6XYuKrE'
 
