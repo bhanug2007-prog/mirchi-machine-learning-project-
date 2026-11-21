@@ -2,11 +2,13 @@
 
 **A full-stack machine learning project that helps Andhra Pradesh chilli farmers compare where and when to sell their harvest**
 
+**Live demo:** [MirchiMandi on Render](https://mirchimandi.onrender.com/)
+
 A farmer with 50 quintals of red chilli can take a village broker's offer, pay to transport the crop to a mandi, or pay for cold storage and sell later. The highest quoted price may leave the farmer with less money once those costs are included.
 
 I built MirchiMandi to make that comparison concrete. A Python pipeline imports variety-level price records from a Guntur Mirchi spreadsheet and AGMARKNET reports into PostgreSQL. I compared 12 regression models on a chronological holdout and saved the best-performing model by mean absolute error for each trained variety. FastAPI serves the latest recorded prices and seven-day estimates to an English and Telugu React dashboard, where farmers can compare **broker proceeds with mandi proceeds after transport** and **potential gains from waiting after storage costs**.
 
-**Project status:** The repository contains a React frontend, a FastAPI backend, ingestion and training scripts, Andhra Pradesh price reports, and saved model artifacts. A live deployment and field adoption have not been verified.
+**Project status:** The repository contains a React frontend, a FastAPI backend, ingestion and training scripts, Andhra Pradesh price reports, and saved model artifacts. Field adoption has not been verified.
 
 ## Table of Contents
 
