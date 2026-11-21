@@ -2,6 +2,8 @@
 
 Real-time Mirchi Price Intelligence for Andhra Pradesh farmers.
 
+**Live demo:** [MirchiMandi on Render](https://mirchimandi.onrender.com/)
+
 ## Project Structure
 
 ```
