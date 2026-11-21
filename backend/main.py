@@ -19,6 +19,8 @@ import numpy as np
 import joblib, json, os
 import requests
 import math
+import re
+from urllib.parse import quote, quote_plus
 from datetime import date, datetime, timedelta
 import warnings
 warnings.filterwarnings('ignore')
@@ -82,7 +84,23 @@ def database_startup_error(error):
         return "Render could not reach the database. Check that Supabase is active and use the Session pooler URI."
     if "ssl" in message or "tls" in message:
         return "The database connection failed during SSL negotiation. Check the connection settings."
-    return "PostgreSQL connection failed for an unrecognized reason. The connection URI has been omitted from the log."
+    if any(phrase in message for phrase in ("circuit breaker", "too many authentication", "server login has been failing")):
+        return "The database pooler is temporarily blocking logins after repeated failures. Verify DB_URL before retrying."
+    if any(phrase in message for phrase in ("too many connections", "max client connections", "remaining connection slots")):
+        return "The database pooler has reached its connection limit."
+
+    # Keep the libpq message for diagnosis after removing the configured connection data.
+    detail = str(error)
+    secrets = {DB_URL}
+    for key in ("password", "user", "host", "hostaddr"):
+        value = settings.get(key)
+        if value:
+            secrets.update((value, quote(value, safe=""), quote_plus(value, safe="")))
+    for value in sorted(secrets, key=len, reverse=True):
+        detail = re.sub(re.escape(value), "[redacted]", detail, flags=re.IGNORECASE)
+    detail = re.sub(r"postgres(?:ql)?://\S+", "[redacted URI]", detail, flags=re.IGNORECASE)
+    detail = " ".join(detail.split())[:400]
+    return f"PostgreSQL connection failed. Driver detail: {detail or 'Unavailable'}"
 
 
 USE_LOCAL_DB = False
