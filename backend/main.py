@@ -59,15 +59,41 @@ def get_duckdb_conn():
         _duckdb_conn.execute("CREATE OR REPLACE MACRO to_char(d, fmt) AS strftime(d, '%b');")
     return _duckdb_conn
 
+def database_startup_error(error):
+    if not DB_URL:
+        return "DB_URL is missing or empty in the service environment."
+
+    try:
+        settings = psycopg2.extensions.parse_dsn(DB_URL)
+    except psycopg2.ProgrammingError:
+        return "DB_URL is malformed. Copy the full Supabase pooler URI and percent-encode reserved password characters."
+
+    if not all(settings.get(key) for key in ("host", "dbname", "user", "password")):
+        return "DB_URL is missing a host, database, username, or password."
+
+    message = str(error).lower()
+    if "password authentication failed" in message or "28p01" in message:
+        return "Supabase rejected the database password. Check the rotated password and its URI encoding."
+    if "tenant or user not found" in message or "role" in message and "does not exist" in message:
+        return "Supabase did not recognize the pooler username or project. Copy the URI from the correct project."
+    if "could not translate host name" in message:
+        return "The database hostname could not be resolved. Check the pooler host copied from Supabase."
+    if any(phrase in message for phrase in ("timeout", "timed out", "connection refused", "network is unreachable")):
+        return "Render could not reach the database. Check that Supabase is active and use the Session pooler URI."
+    if "ssl" in message or "tls" in message:
+        return "The database connection failed during SSL negotiation. Check the connection settings."
+    return "PostgreSQL connection failed for an unrecognized reason. The connection URI has been omitted from the log."
+
+
 USE_LOCAL_DB = False
 try:
     if not DB_URL:
         raise RuntimeError("DB_URL is unset")
     _test_conn = psycopg2.connect(DB_URL, connect_timeout=5)
     _test_conn.close()
-except Exception:
+except (psycopg2.Error, RuntimeError) as error:
     if os.environ.get("REQUIRE_REMOTE_DB") == "1":
-        raise RuntimeError("Cannot connect to PostgreSQL. Check DB_URL.") from None
+        raise RuntimeError(database_startup_error(error)) from None
     USE_LOCAL_DB = True
     print(f"⚠️  Remote database unavailable. Using local embedded database: {LOCAL_DB_FILE}")
 
