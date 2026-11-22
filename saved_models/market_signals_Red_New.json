@@ -1,0 +1,279 @@
+{
+  "market": "Guntur APMC",
+  "variety": "Red New",
+  "grade": "FAQ",
+  "data_start": "2025-11-07",
+  "data_end": "2026-07-09",
+  "evaluation_start": "2026-04-09",
+  "quote_dates": 141,
+  "weather_evaluated": true,
+  "weather_source": "Open-Meteo ERA5 reanalysis",
+  "weather_lag_days": 6,
+  "weather_coverage": [
+    "2025-10-25",
+    "2026-07-09"
+  ],
+  "arrival_history": [
+    {
+      "date": "2026-06-25",
+      "tonnes": 451.72
+    },
+    {
+      "date": "2026-06-29",
+      "tonnes": 484.08
+    },
+    {
+      "date": "2026-06-30",
+      "tonnes": 626.44
+    },
+    {
+      "date": "2026-07-01",
+      "tonnes": 565.6
+    },
+    {
+      "date": "2026-07-02",
+      "tonnes": 522.96
+    },
+    {
+      "date": "2026-07-03",
+      "tonnes": 518.32
+    },
+    {
+      "date": "2026-07-06",
+      "tonnes": 448.64
+    },
+    {
+      "date": "2026-07-07",
+      "tonnes": 447.44
+    },
+    {
+      "date": "2026-07-08",
+      "tonnes": 526.76
+    },
+    {
+      "date": "2026-07-09",
+      "tonnes": 564.88
+    }
+  ],
+  "horizons": [
+    {
+      "day": 1,
+      "scored": 32,
+      "metrics": {
+        "persistence": {
+          "mae": 53.12,
+          "rmse": 157.12
+        },
+        "price": {
+          "mae": 111.43,
+          "rmse": 166.86
+        },
+        "arrivals": {
+          "mae": 114.25,
+          "rmse": 175.48
+        },
+        "weather": {
+          "mae": 138.16,
+          "rmse": 202.9
+        },
+        "combined": {
+          "mae": 170.5,
+          "rmse": 223.88
+        }
+      }
+    },
+    {
+      "day": 2,
+      "scored": 23,
+      "metrics": {
+        "persistence": {
+          "mae": 52.17,
+          "rmse": 153.23
+        },
+        "price": {
+          "mae": 221.74,
+          "rmse": 315.77
+        },
+        "arrivals": {
+          "mae": 235.42,
+          "rmse": 315.02
+        },
+        "weather": {
+          "mae": 273.23,
+          "rmse": 412.09
+        },
+        "combined": {
+          "mae": 300.86,
+          "rmse": 397.38
+        }
+      }
+    },
+    {
+      "day": 3,
+      "scored": 20,
+      "metrics": {
+        "persistence": {
+          "mae": 100.0,
+          "rmse": 209.76
+        },
+        "price": {
+          "mae": 210.63,
+          "rmse": 322.74
+        },
+        "arrivals": {
+          "mae": 225.66,
+          "rmse": 324.85
+        },
+        "weather": {
+          "mae": 218.03,
+          "rmse": 336.02
+        },
+        "combined": {
+          "mae": 241.86,
+          "rmse": 359.71
+        }
+      }
+    },
+    {
+      "day": 4,
+      "scored": 19,
+      "metrics": {
+        "persistence": {
+          "mae": 189.47,
+          "rmse": 297.36
+        },
+        "price": {
+          "mae": 230.53,
+          "rmse": 291.4
+        },
+        "arrivals": {
+          "mae": 214.89,
+          "rmse": 261.71
+        },
+        "weather": {
+          "mae": 259.37,
+          "rmse": 318.57
+        },
+        "combined": {
+          "mae": 237.39,
+          "rmse": 301.75
+        }
+      }
+    },
+    {
+      "day": 5,
+      "scored": 20,
+      "metrics": {
+        "persistence": {
+          "mae": 170.0,
+          "rmse": 275.68
+        },
+        "price": {
+          "mae": 227.6,
+          "rmse": 270.65
+        },
+        "arrivals": {
+          "mae": 199.42,
+          "rmse": 258.76
+        },
+        "weather": {
+          "mae": 320.86,
+          "rmse": 382.69
+        },
+        "combined": {
+          "mae": 255.85,
+          "rmse": 301.15
+        }
+      }
+    },
+    {
+      "day": 6,
+      "scored": 27,
+      "metrics": {
+        "persistence": {
+          "mae": 200.0,
+          "rmse": 305.51
+        },
+        "price": {
+          "mae": 256.62,
+          "rmse": 304.66
+        },
+        "arrivals": {
+          "mae": 226.77,
+          "rmse": 296.06
+        },
+        "weather": {
+          "mae": 289.83,
+          "rmse": 347.25
+        },
+        "combined": {
+          "mae": 275.84,
+          "rmse": 350.26
+        }
+      }
+    },
+    {
+      "day": 7,
+      "scored": 31,
+      "metrics": {
+        "persistence": {
+          "mae": 222.58,
+          "rmse": 324.78
+        },
+        "price": {
+          "mae": 277.81,
+          "rmse": 328.95
+        },
+        "arrivals": {
+          "mae": 265.38,
+          "rmse": 328.91
+        },
+        "weather": {
+          "mae": 289.54,
+          "rmse": 343.41
+        },
+        "combined": {
+          "mae": 361.69,
+          "rmse": 437.79
+        }
+      }
+    }
+  ],
+  "weather_history": [
+    {
+      "date": "2026-07-03",
+      "rain_mm": 2.3,
+      "max_temp_c": 32.0
+    },
+    {
+      "date": "2026-07-04",
+      "rain_mm": 6.6,
+      "max_temp_c": 32.8
+    },
+    {
+      "date": "2026-07-05",
+      "rain_mm": 1.2,
+      "max_temp_c": 33.4
+    },
+    {
+      "date": "2026-07-06",
+      "rain_mm": 0.2,
+      "max_temp_c": 37.2
+    },
+    {
+      "date": "2026-07-07",
+      "rain_mm": 0.0,
+      "max_temp_c": 37.2
+    },
+    {
+      "date": "2026-07-08",
+      "rain_mm": 0.0,
+      "max_temp_c": 37.5
+    },
+    {
+      "date": "2026-07-09",
+      "rain_mm": 8.9,
+      "max_temp_c": 37.6
+    }
+  ]
+}

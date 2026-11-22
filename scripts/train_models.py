@@ -1,10 +1,11 @@
 """
-STEP 2: Train ALL ML Models and Compare
-=========================================
+STEP 2: Train ALL 12 ML Models and Compare with Baseline
+=========================================================
 Run: python 02_train_models.py
 
-Trains 10 models, compares accuracy, saves best model.
-Also prints a full comparison table so you can show it in your project.
+Configures and trains 12 ML algorithms (linear, regularized, tree, ensemble,
+boosting, and deep learning), compares 1-day model selection metrics against a
+Last-Observed-Price persistence baseline, and saves the best model artifact.
 """
 
 import pandas as pd
@@ -172,13 +173,15 @@ def build_features(df):
 
 
 # ─────────────────────────────────────────────────────
-# EVALUATION METRICS
+# EVALUATION METRICS (1-step-ahead model selection)
 # ─────────────────────────────────────────────────────
 def evaluate(y_true, y_pred, model_name):
+    # Guard against zero/missing actuals in percentage error calculation
+    valid_mask = (y_true != 0) & (~np.isnan(y_true))
     mae  = mean_absolute_error(y_true, y_pred)
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     r2   = r2_score(y_true, y_pred)
-    mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+    mape = np.mean(np.abs((y_true[valid_mask] - y_pred[valid_mask]) / y_true[valid_mask])) * 100
     return {
         'model':    model_name,
         'MAE':      float(round(mae, 2)),
@@ -189,7 +192,7 @@ def evaluate(y_true, y_pred, model_name):
 
 
 # ─────────────────────────────────────────────────────
-# TRAIN ALL MODELS
+# TRAIN ALL 12 MODELS + EVALUATE BASELINE
 # ─────────────────────────────────────────────────────
 def train_all_models(variety="Red New", market="Guntur APMC"):
     print(f"\n🌶  Training models for: {variety} @ {market}")
@@ -222,17 +225,22 @@ def train_all_models(variety="Red New", market="Guntur APMC"):
 
     print(f"  Train: {len(X_train)} rows | Test: {len(X_test)} rows")
 
+    # Reference Persistence Baseline: y_hat = previous observed price (lag_1)
+    baseline_preds = df['lag_1'].values[split:]
+    baseline_metrics = evaluate(y_test, baseline_preds, "Last Observed Price (Baseline)")
+
     # Scale for models that need it
     scaler = StandardScaler()
     X_train_sc = scaler.fit_transform(X_train)
     X_test_sc  = scaler.transform(X_test)
 
-    # ─── ALL 10 MODELS ───────────────────────────────
+    # ─── ALL 12 TRAINED ALGORITHMS ─────────────────────
     models = {
-        # Simple / baseline models
+        # Simple / regularized linear models
         "Linear Regression":    (LinearRegression(),            False),
         "Ridge Regression":     (Ridge(alpha=1.0),              False),
         "Lasso Regression":     (Lasso(alpha=100),              False),
+        # Tree & instance-based models
         "Decision Tree":        (DecisionTreeRegressor(
                                     max_depth=8,
                                     random_state=42),            False),
@@ -268,6 +276,7 @@ def train_all_models(variety="Red New", market="Guntur APMC"):
                                     num_leaves=31,
                                     random_state=42,
                                     verbose=-1),                False),
+        # Deep learning MLP
         "PyTorch MLP":          (PyTorchMLPRegressor(epochs=150, lr=0.01), True),
     }
 
@@ -290,15 +299,17 @@ def train_all_models(variety="Red New", market="Guntur APMC"):
 
     # ─── COMPARISON TABLE ────────────────────────────
     results_df = pd.DataFrame(results).sort_values('MAE')
-    print(f"\n{'='*65}")
-    print(f"📊 MODEL COMPARISON — {variety} @ {market}")
-    print(f"{'='*65}")
-    print(f"{'Rank':<5} {'Model':<25} {'MAE (₹)':>10} {'RMSE (₹)':>10} {'R²':>8} {'MAPE%':>8}")
-    print(f"{'-'*65}")
+    print(f"\n{'='*75}")
+    print(f"📊 MODEL COMPARISON — {variety} @ {market} (1-Day Model Selection)")
+    print(f"{'='*75}")
+    print(f"{'Rank':<5} {'Model':<28} {'MAE (₹/qtl)':>12} {'RMSE (₹/qtl)':>12} {'R²':>8} {'MAPE%':>8}")
+    print(f"{'-'*75}")
+    print(f"{'--':<5} {baseline_metrics['model']:<28} {baseline_metrics['MAE']:>12,.0f} {baseline_metrics['RMSE']:>12,.0f} {baseline_metrics['R2']:>8.4f} {baseline_metrics['MAPE (%)']:>8.1f} [REF]")
+    print(f"{'-'*75}")
     for i, row in enumerate(results_df.itertuples(), 1):
-        flag = " ⭐ BEST" if i == 1 else ""
-        print(f"{i:<5} {row.model:<25} {row.MAE:>10,.0f} {row.RMSE:>10,.0f} {row.R2:>8.4f} {getattr(row,'MAPE (%)',0):>8.1f}{flag}")
-    print(f"{'='*65}")
+        flag = " ⭐ BEST TRAINED" if i == 1 else ""
+        print(f"{i:<5} {row.model:<28} {row.MAE:>12,.0f} {row.RMSE:>12,.0f} {row.R2:>8.4f} {getattr(row,'MAPE (%)',0):>8.1f}{flag}")
+    print(f"{'='*75}")
 
     # ─── SAVE BEST MODEL ─────────────────────────────
     best_name = results_df.iloc[0]['model']
@@ -315,26 +326,30 @@ def train_all_models(variety="Red New", market="Guntur APMC"):
         joblib.dump(best_scaler, scaler_path)
 
     meta = {
-        'variety':        variety,
-        'market':         market,
-        'best_model':     best_name,
-        'mae':            float(results_df.iloc[0]['MAE']),
-        'rmse':           float(results_df.iloc[0]['RMSE']),
-        'r2':             float(results_df.iloc[0]['R2']),
-        'mape':           float(results_df.iloc[0]['MAPE (%)']),
-        'needs_scale':    best_scaler is not None,
-        'trained_at':     datetime.now().isoformat(),
-        'train_rows':     len(X_train),
-        'test_rows':      len(X_test),
-        'all_results':    results_df.to_dict('records'),
+        'variety':            variety,
+        'market':             market,
+        'best_model':         best_name,
+        'mae':                float(results_df.iloc[0]['MAE']),
+        'rmse':               float(results_df.iloc[0]['RMSE']),
+        'r2':                 float(results_df.iloc[0]['R2']),
+        'mape':               float(results_df.iloc[0]['MAPE (%)']),
+        'needs_scale':        best_scaler is not None,
+        'trained_at':         datetime.now().isoformat(),
+        'train_rows':         len(X_train),
+        'test_rows':          len(X_test),
+        'models_configured':  len(models),
+        'models_evaluated':   len(results),
+        'baseline_metrics':   baseline_metrics,
+        'all_results':        results_df.to_dict('records'),
     }
     with open(meta_path, 'w') as f:
         json.dump(meta, f, indent=2)
     with open(cols_path, 'w') as f:
         json.dump(feature_cols, f)
 
-    print(f"\n✅ Best model saved: {best_name}")
+    print(f"\n✅ Best trained model saved: {best_name}")
     print(f"   MAE = ₹{meta['mae']:,.0f}/quintal  |  R² = {meta['r2']:.4f}")
+    print(f"   Reference Baseline MAE = ₹{baseline_metrics['MAE']:,.0f}/quintal")
     print(f"   File: {model_path}")
 
     # ─── SAVE RESULTS TO SUPABASE ────────────────────

@@ -19,6 +19,7 @@ __pycache__/
 .env.production.local
 *.duckdb
 *.duckdb.wal
+portfolio.sqlite3*
 
 # IDE configurations
 .vscode/

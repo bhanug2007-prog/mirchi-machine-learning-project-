@@ -1,0 +1,208 @@
+{
+  "market": "Guntur APMC",
+  "variety": "Red New",
+  "grade": "FAQ",
+  "target_coverage": 0.8,
+  "results": {
+    "split_info": {
+      "total_count": 141,
+      "model_selection": {
+        "start_date": "2025-11-07",
+        "end_date": "2026-02-19",
+        "count": 70
+      },
+      "calibration": {
+        "start_date": "2026-02-20",
+        "end_date": "2026-04-20",
+        "count": 35
+      },
+      "evaluation": {
+        "start_date": "2026-04-21",
+        "end_date": "2026-07-09",
+        "count": 36
+      }
+    },
+    "selected_method": "Last Observed Price (Persistence Baseline)",
+    "model_sel_comparison": {
+      "1": {
+        "baseline_mae": 308.33,
+        "lasso_mae": 354.97,
+        "winner": "Baseline (Last Observed Price)"
+      },
+      "2": {
+        "baseline_mae": 594.12,
+        "lasso_mae": 1066.45,
+        "winner": "Baseline (Last Observed Price)"
+      },
+      "3": {
+        "baseline_mae": 731.25,
+        "lasso_mae": 1268.88,
+        "winner": "Baseline (Last Observed Price)"
+      },
+      "4": {
+        "baseline_mae": 737.5,
+        "lasso_mae": 1360.92,
+        "winner": "Baseline (Last Observed Price)"
+      },
+      "5": {
+        "baseline_mae": 743.75,
+        "lasso_mae": 2982.3,
+        "winner": "Baseline (Last Observed Price)"
+      },
+      "6": {
+        "baseline_mae": 890.91,
+        "lasso_mae": 3711.15,
+        "winner": "Baseline (Last Observed Price)"
+      },
+      "7": {
+        "baseline_mae": 1070.37,
+        "lasso_mae": 4869.56,
+        "winner": "Baseline (Last Observed Price)"
+      }
+    },
+    "horizon_calibration": {
+      "1": {
+        "status": "calibrated",
+        "n": 22,
+        "k": 19,
+        "width": 0.0
+      },
+      "2": {
+        "status": "calibrated",
+        "n": 17,
+        "k": 15,
+        "width": 500.0
+      },
+      "3": {
+        "status": "calibrated",
+        "n": 16,
+        "k": 14,
+        "width": 500.0
+      },
+      "4": {
+        "status": "calibrated",
+        "n": 15,
+        "k": 13,
+        "width": 500.0
+      },
+      "5": {
+        "status": "calibrated",
+        "n": 16,
+        "k": 14,
+        "width": 500.0
+      },
+      "6": {
+        "status": "calibrated",
+        "n": 19,
+        "k": 16,
+        "width": 500.0
+      },
+      "7": {
+        "status": "calibrated",
+        "n": 26,
+        "k": 22,
+        "width": 500.0
+      }
+    },
+    "horizon_metrics": {
+      "1": {
+        "horizon": 1,
+        "target_coverage_pct": 80,
+        "empirical_coverage_pct": 89.3,
+        "conformal_width_qtl": 0.0,
+        "scored_eval_dates": 28,
+        "baseline_mae": 42.86,
+        "baseline_rmse": 138.87,
+        "lasso_mae": 232.12,
+        "lasso_rmse": 438.97,
+        "interval_status": "calibrated",
+        "calibration_sample_count": 22,
+        "conformal_k": 19
+      },
+      "2": {
+        "horizon": 2,
+        "target_coverage_pct": 80,
+        "empirical_coverage_pct": 100.0,
+        "conformal_width_qtl": 500.0,
+        "scored_eval_dates": 20,
+        "baseline_mae": 60.0,
+        "baseline_rmse": 164.32,
+        "lasso_mae": 373.48,
+        "lasso_rmse": 548.47,
+        "interval_status": "calibrated",
+        "calibration_sample_count": 17,
+        "conformal_k": 15
+      },
+      "3": {
+        "horizon": 3,
+        "target_coverage_pct": 80,
+        "empirical_coverage_pct": 100.0,
+        "conformal_width_qtl": 500.0,
+        "scored_eval_dates": 16,
+        "baseline_mae": 125.0,
+        "baseline_rmse": 234.52,
+        "lasso_mae": 469.8,
+        "lasso_rmse": 763.58,
+        "interval_status": "calibrated",
+        "calibration_sample_count": 16,
+        "conformal_k": 14
+      },
+      "4": {
+        "horizon": 4,
+        "target_coverage_pct": 80,
+        "empirical_coverage_pct": 100.0,
+        "conformal_width_qtl": 500.0,
+        "scored_eval_dates": 14,
+        "baseline_mae": 221.43,
+        "baseline_rmse": 319.6,
+        "lasso_mae": 734.81,
+        "lasso_rmse": 961.62,
+        "interval_status": "calibrated",
+        "calibration_sample_count": 15,
+        "conformal_k": 13
+      },
+      "5": {
+        "horizon": 5,
+        "target_coverage_pct": 80,
+        "empirical_coverage_pct": 100.0,
+        "conformal_width_qtl": 500.0,
+        "scored_eval_dates": 16,
+        "baseline_mae": 212.5,
+        "baseline_rmse": 308.22,
+        "lasso_mae": 814.65,
+        "lasso_rmse": 1032.56,
+        "interval_status": "calibrated",
+        "calibration_sample_count": 16,
+        "conformal_k": 14
+      },
+      "6": {
+        "horizon": 6,
+        "target_coverage_pct": 80,
+        "empirical_coverage_pct": 100.0,
+        "conformal_width_qtl": 500.0,
+        "scored_eval_dates": 22,
+        "baseline_mae": 222.73,
+        "baseline_rmse": 321.22,
+        "lasso_mae": 856.93,
+        "lasso_rmse": 1114.04,
+        "interval_status": "calibrated",
+        "calibration_sample_count": 19,
+        "conformal_k": 16
+      },
+      "7": {
+        "horizon": 7,
+        "target_coverage_pct": 80,
+        "empirical_coverage_pct": 100.0,
+        "conformal_width_qtl": 500.0,
+        "scored_eval_dates": 24,
+        "baseline_mae": 245.83,
+        "baseline_rmse": 339.73,
+        "lasso_mae": 1044.0,
+        "lasso_rmse": 1348.43,
+        "interval_status": "calibrated",
+        "calibration_sample_count": 26,
+        "conformal_k": 22
+      }
+    }
+  }
+}

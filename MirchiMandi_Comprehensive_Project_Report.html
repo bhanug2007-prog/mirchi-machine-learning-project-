@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MirchiMandi - Comprehensive Project & Feature Report</title>
+  <!-- GitHub Markdown CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.0/github-markdown.min.css">
+  <!-- Highlight.js for code blocks -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <style>
+    body {
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 24px 16px;
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      background: #161b22;
+      padding: 48px;
+      border-radius: 12px;
+      border: 1px solid #30363d;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+    }
+    .markdown-body {
+      background-color: transparent !important;
+      color: #c9d1d9 !important;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+      color: #f0f6fc;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 8px;
+      margin-top: 28px;
+    }
+    .markdown-body table {
+      width: 100%;
+      margin: 20px 0;
+      border-collapse: collapse;
+      display: table !important;
+    }
+    .markdown-body th, .markdown-body td {
+      border: 1px solid #30363d !important;
+      padding: 10px 14px;
+    }
+    .markdown-body th {
+      background-color: #21262d !important;
+      color: #58a6ff;
+      font-weight: 700;
+    }
+    .markdown-body tr:nth-child(2n) {
+      background-color: #161b22 !important;
+    }
+    .markdown-body blockquote {
+      border-left: 4px solid #388bfd;
+      color: #8b949e;
+      background: #0d1117;
+      padding: 12px 18px;
+      border-radius: 0 8px 8px 0;
+    }
+    .markdown-body img {
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+    }
+    .action-bar {
+      position: sticky;
+      top: 16px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 24px;
+      z-index: 1000;
+    }
+    .btn {
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(35,134,54,0.4);
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background: #2ea043;
+      transform: translateY(-1px);
+    }
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #24292f !important;
+        padding: 0;
+      }
+      .container {
+        background: #ffffff !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0;
+        max-width: 100%;
+      }
+      .markdown-body {
+        color: #24292f !important;
+      }
+      .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+        color: #24292f !important;
+        border-bottom: 1px solid #d0d7de !important;
+      }
+      .markdown-body th {
+        background-color: #f6f8fa !important;
+        color: #24292f !important;
+      }
+      .markdown-body th, .markdown-body td {
+        border: 1px solid #d0d7de !important;
+      }
+      .markdown-body tr:nth-child(2n) {
+        background-color: #f6f8fa !important;
+      }
+      .action-bar {
+        display: none !important;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="action-bar">
+    <button class="btn" onclick="window.print()">
+      🖨️ Print / Save as PDF
+    </button>
+  </div>
+  <div class="container">
+    <article id="content" class="markdown-body"></article>
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+    const rawMarkdown = "# \ud83c\udf36\ufe0f MirchiMandi: Comprehensive Project & Feature Report\n\n> **Real-Time Chilli Price Intelligence, Machine Learning Forecasting & Decision Support for Indian Farmers**\n\n---\n\n## 1. Executive Summary\n\n**MirchiMandi** is a domain-specific AgriTech intelligence platform engineered for red chilli cultivators across Andhra Pradesh and Telangana (specifically centered around the **Guntur APMC Yard**, the largest chilli market in Asia).\n\nThe platform bridges the long-standing information and negotiation asymmetry between rural chilli farmers and intermediaries (commission brokers, traders, and cold storage operators) by transforming complex market data and machine learning forecasts into simple, actionable selling advice: **\"Sell Today\" vs. \"Wait X Days\"** and **\"Sell to Local Broker\" vs. \"Transport to Mandi\"**.\n\n![Harvested Indian Red Chillies (Guntur S17 & Teja Variety)](https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=1200&q=80)\n\n---\n\n## 2. The Real-World Problem Identified\n\nChilli farming is one of the most capital-intensive, high-risk agricultural ventures in Southern India. Farmers invest \u20b91.5 to \u20b92.5 Lakhs per acre over a 5 to 6-month crop cycle involving intensive labor, pest management, and post-harvest sun curing. However, at harvest, farmers face three critical structural challenges:\n\n### A. The Information Asymmetry Gap (The Farmgate Discount)\n- **Broker Exploitation**: Middlemen and commission agents frequently visit villages (e.g., Pavulur, Inkollu, Chilakaluripet, Tenali) and exploit farmers' lack of live market visibility. Agents often claim that *\"prices crashed at Guntur yard today\"* and quote rates \u20b91,500 to \u20b93,500 below actual prevailing modal rates.\n- **Financial Impact**: For a small-to-medium farmer selling 50 quintals, a \u20b92,000/qtl gap represents a **direct, unrecoverable loss of \u20b91,00,000** in a single afternoon.\n\n### B. The Logistics & Distance Dilemma (Transport Arbitrage)\n- Even when a farmer suspects a broker's price is low, transporting crop to Guntur APMC involves significant logistics costs:\n  - Vehicle hire (Tractor: \u20b91,500 base + \u20b935/km; Tata Ace Trolley: \u20b9800 base + \u20b925/km; Truck: \u20b93,000 base + \u20b945/km).\n  - *Hamali* (unloading & loading labor: \u20b940 per quintal).\n- If the volume of harvest is small (e.g., 15\u201320 quintals) or the distance is substantial, transport expenses can wipe out the price difference, leaving the farmer worse off. Farmers previously had no tool to calculate this trade-off.\n\n### C. The Cold Storage Holding Dilemma\n- During harvest glut (February to May), prices often dip. Farmers must decide whether to sell immediately or rent space in commercial cold storages until the off-season (July to October).\n- Cold storage and transport risk costs approximately **\u20b930 per quintal per day**.\n- If the market price increases by only \u20b9100/qtl over 30 days, the farmer incurs a net loss after paying \u20b9900/qtl in storage and financing costs.\n\n### D. Agmarknet Reporting Blindspots\n- Official government portals (Agmarknet) record generic labels like *\"Red\"*, *\"Red New\"*, or *\"White\"*, while commercial trade operates on distinct cultivars: **Teja S17, 334 Sannam, Byadgi, 341, DD Deluxe, and Armoor**. Standard portals fail to capture these crucial variety-specific premiums.\n\n---\n\n## 3. What Problem MirchiMandi Solves\n\n```mermaid\nflowchart LR\n    A[\"Farmer at Farmgate<br/>(50 Qtls Harvested)\"] --> B{\"The Critical Dilemma\"}\n    B -->|\"Option 1\"| C[\"Sell to Visiting Broker<br/>(Immediate Cash, but Discounted)\"]\n    B -->|\"Option 2\"| D[\"Transport to Guntur APMC<br/>(Higher Price - Transport Costs)\"]\n    B -->|\"Option 3\"| E[\"Deposit in Cold Storage<br/>(Hold for Off-Season Price Surge)\"]\n\n    F[\"\ud83c\udf36\ufe0f MirchiMandi Engine\"] -.->|\"Calculates Arbitrage & Distance\"| C\n    F -.->|\"Live Yard Rates & Net Profit\"| D\n    F -.->|\"7-Day ML Forecast - Holding Cost\"| E\n\n    C & D & E --> G[\"Optimal Recommendation:<br/>Maximized Net Profit (\u20b9)\"]\n```\n\n1. **Eliminates Market Blindness**: Provides verified daily price trends across all AP commercial varieties (Teja S17, 334 Sannam, 341, Byadgi, DD Deluxe, Armoor) with min, max, and modal averages.\n2. **Quantifies Broker Exploitation in Rupees**: The Profit Calculator immediately displays: *\"You are losing \u20b945,000 by selling to the broker at \u20b916,500 vs. Mandi \u20b917,400\"*.\n3. **Calculates Exact Transport Feasibility**: Using rural AP pincodes and road distance coefficients, it calculates exact haulage and labor costs to tell the farmer whether going to the yard is profitable.\n4. **Predicts the Trend with Storage-Cost Subtraction**: Rather than naive price prediction, the recommendation engine subtracts daily storage costs from ML forecasts to inform the farmer if waiting truly yields net profit.\n\n---\n\n## 4. Key Platform Features\n\n### 1. 3D Animated Interactive Landing Page\n- **Hero Canvas**: Built with Three.js, rendering realistic 3D Indian red chillies with natural sickle curvature, tapered fluting, green calyx/stem, organic PBR physical wax sheen, and ambient spice embers.\n- **Interactive Mouse Parallax & 360\u00b0 Drag**: Users can tilt and rotate the 3D chillies in real-time.\n- **Bilingual Switcher**: Seamless instant toggle between English and Telugu (\u0c24\u0c46\u0c32\u0c41\u0c17\u0c41) across all headers, cards, and data metrics.\n- **Harvest Showcase**: Features high-resolution imagery of harvested dry red chillies with authentic grading tags.\n\n### 2. Live Market Intelligence Dashboard\n- **Daily Price & Arrivals Widget**: Live modal, minimum, and maximum prices for the selected variety and yard, including daily rate changes (\u20b9 and %) and arrival volumes in metric tonnes.\n- **All Varieties Comparison Table**: Instant price league table ranking all commercial grades (Deluxe, Best, Medium, Fatki) for that day.\n- **Outdated Data Guard**: Transparent badge notifications if a specific variety hasn't had fresh arrivals in over 2 days.\n\n### 3. AI/ML 7-Day Price Forecasting\n- Generates 7-day future price trajectories for each chilli cultivar.\n- Visual trend indicator: **RISING \u2191** (green) or **FALLING \u2193** (red) with projected maximum price gain per quintal and optimal target selling day.\n- Model transparency badge disclosing which algorithm is actively generating predictions (e.g., Lasso Regression, LightGBM, or XGBoost) along with MAE and accuracy metrics.\n\n### 4. Smart Recommendation Engine (\"Sell Today\" vs. \"Wait X Days\")\n- Algorithms factor in a realistic **\u20b930/quintal/day holding and storage cost**.\n- Computes whether the projected price appreciation exceeds both the holding cost and a minimum risk buffer (\u20b9200/qtl).\n- Generates clear bilingual explanations:\n  > *\"Storing 50 qtl for 7 days costs \u20b910,500, while your total projected price gain is \u20b927,200, yielding a net additional profit of \u20b916,700.\"*\n\n### 5. Broker vs. Mandi Profit Calculator\n- Farmers input their total quintals and the price offered by a local broker.\n- Computes total mandi revenue vs. broker revenue and highlights total lost income.\n\n### 6. Transport & Arbitrage Route Calculator\n- Coordinates and distance mapping for Andhra Pradesh agricultural hubs (Pavulur, Inkollu, Chirala, Bapatla, Chilakaluripet, Narasaraopet, Tenali, Vijayawada, Guntur).\n- **Distance Estimation Methodology**:\n  - Primary route: OpenStreetMap Nominatim geocoding + Haversine geodesic distance multiplied by a **1.47 rural road detour factor** to accurately approximate rural Andhra Pradesh road networks.\n  - Fallback route: Pincode prefix zone heuristic when geocoding is unavailable.\n- **Freight Cost Assumptions**:\n  - Vehicles: **Tractor** (\u20b91,500 base + \u20b935/km, up to 100 qtls), **Tata Ace Trolley** (\u20b9800 base + \u20b925/km, up to 30 qtls), **Truck** (\u20b93,000 base + \u20b945/km, up to 250 qtls).\n  - *Hamali* (loading & unloading labor): \u20b940 per quintal (\u20b920 loading + \u20b920 unloading).\n  - **Return Trip Exclusion**: Standard one-way freight tariff (empty return trips are absorbed by vehicle operators in local agricultural freight).\n- **Transparent Estimate Labelling**:\n  - All transport calculations are explicitly labeled as **estimates** in both English and Telugu (`is_estimate: True`, bilingual assumption banners).\n  - Net proceed comparison: Gross Mandi Value minus Total Logistics Fare vs. Broker Revenue, with actionable recommendations.\n\n### 7. Crowdsourced Farmer Price Reporting & Verification\n- Farmers and traders can submit spot prices for unlisted commercial cultivars (Teja S17, 334 Sannam, Byadgi, Fatki, etc.) with grade tagging (FAQ, Medium, Deluxe, User Reported).\n- **Hierarchical Like-for-Like Reference Comparison**:\n  - Submissions are compared against historical benchmarks in a strict 5-tier fallback: (1) Market + Variety + Grade \u2192 (2) Market + Variety \u2192 (3) Verified User Submissions \u2192 (4) Variety Statewide \u2192 (5) General Market Benchmark.\n- **Outlier Quarantine (Non-Rejection Policy)**:\n  - Prices deviating more than **\u00b125%** from the like-for-like reference are **not rejected with a 400 error**; instead, they are flagged (`is_flagged: True`, `status: \"flagged_for_review\"`), preserving reported values and reasons.\n  - **Quarantine Isolation**: All unverified and flagged submissions are strictly excluded from public market aggregations until reviewed and verified by an administrator.\n  - Novel varieties without historical benchmarks are held in queue for initial validation.\n- Admin moderation dashboard with passcode authentication to verify legitimate variety premiums or delete spam submissions.\n\n---\n\n## 5. How It Works (Technical Architecture)\n\n```mermaid\ngraph TD\n    subgraph Data Sources\n        DS1[\"Google Sheets Live API<br/>(28,312 Historical & Daily Records)\"]\n        DS2[\"Agmarknet Bundled CSVs<br/>(1,432 Local Validated Records)\"]\n        DS3[\"Farmer Spot Submissions<br/>(Quarantine Review Pipeline)\"]\n    end\n\n    subgraph Data Pipeline & Storage\n        ING[\"Data Ingestion & Normalizer<br/>(Cleaning, Deduplication, Grade Mapping)\"]\n        DB[(\"Embedded Local DuckDB / Supabase<br/>(29,744 Stored Records)\")]\n    end\n\n    subgraph Machine Learning Pipeline\n        FE[\"Rolling Feature Engineering<br/>(Lags t-1..t-7, 7D/14D Moving Averages, Volatility)\"]\n        MODELS[\"12 Trained Architectures + 1 Baseline<br/>(120 Benchmarks across 10 Varieties)\"]\n        EVAL[\"Model Registry & Evaluation<br/>(1-Day Model Selection vs. 7-Day Backtest)\"]\n    end\n\n    subgraph Backend API (FastAPI)\n        EP1[\"/api/price/today\"]\n        EP2[\"/api/forecast (7-Day ML)\"]\n        EP3[\"/api/recommendation (Net Gain)\"]\n        EP4[\"/api/arbitrage (Transport Freight)\"]\n        EP5[\"/api/health & /api/audit/stats\"]\n    end\n\n    subgraph Frontend Application (Vite + React)\n        UI1[\"3D Animated Landing Page<br/>(Three.js + Tailwind CSS)\"]\n        UI2[\"Farmer Dashboard & Admin Queue<br/>(Bilingual EN / Telugu, Offline Indicator)\"]\n    end\n\n    DS1 & DS2 & DS3 --> ING --> DB\n    DB --> FE --> MODELS --> EVAL\n    DB & EVAL --> EP1 & EP2 & EP3 & EP4 & EP5\n    EP1 & EP2 & EP3 & EP4 & EP5 --> UI1 & UI2\n```\n\n### 1. The Machine Learning Engine & Benchmark Reconciliation\nDuring model training (`scripts/02_train_models.py` and `scripts/train_models.py`), the system evaluates **12 distinct machine learning architectures** plus **1 reference naive persistence baseline** across 10 commercial varieties, generating exactly **120 model benchmarks**:\n\n1. Linear Regression (Unregularized OLS)\n2. Ridge Regression (L2 regularization)\n3. **Lasso Regression** (L1 feature selection)\n4. Decision Tree Regressor\n5. K-Nearest Neighbors (KNN)\n6. Support Vector Regressor (SVR - RBF kernel)\n7. Random Forest Regressor\n8. Extra Trees Regressor\n9. Gradient Boosting Regressor\n10. **XGBoost Regressor** (Extreme Gradient Boosting)\n11. **LightGBM Regressor** (Light Gradient Boosting Machine)\n12. **PyTorch MLP** (Multi-Layer Perceptron neural network)\n13. *Reference Baseline*: **Last Observed Price (Persistence)**\n\n> [!NOTE]\n> **Model Count Reconciliation**: An earlier draft claimed \"11 models\" while listing 12. The audit verified that exactly 12 ML architectures were configured, trained, and benchmarked across all 10 varieties. PyTorch MLP was added to the training pipeline after the initial 11 scikit-learn/gradient-boosting algorithms were authored, leaving a legacy docstring. The persistence baseline is now counted separately as a non-parametric reference.\n\n- **Feature Engineering Pipeline**: Lag features (`t-1`, `t-2`, `t-3`, `t-7`), 7-day and 14-day rolling moving averages, rolling standard deviation (price volatility), calendar features (day of week, month), and arrival volume trends.\n- **Model Selection Protocol (1-Day Ahead Evaluation)**:\n  - Models are trained on an 80% chronological train split and scored on a 20% holdout test split.\n  - For *Red New*, **Lasso Regression** was selected as best model with **MAE = \u20b9661.32/quintal** and **MAPE = 3.88%** on 23 test days (evaluated between 2025-11-07 and 2026-07-09, reference test set mean \u20b917,043/qtl).\n  - Note: Holdout $R^2$ is -13.11, reflecting the difficulty of parameterized point predictions on small stationary agricultural holdouts compared to constant mean predictions.\n\n### 2. Multi-Step 7-Day Forecast & Data Leakage Audit\nTo defend the forecasting claims in technical interviews, the forecasting pipeline and `scripts/backtest.py` were extended to compare:\n1. **Last Observed Price (Persistence Baseline)**: Naive forecast holding $y_{t+h} = y_t$.\n2. **Direct Ridge Experiment**: Separate direct models fitted for each horizon $h \\in [1..7]$.\n3. **Serving Recursive Pipeline**: The actual multi-step recursive autoregressive pipeline served by `/api/forecast` (`Lasso` with rolling feature recomputation).\n\n#### Empirical Backtest Results (Evaluated on Guntur APMC Red New across 31 historical forecast origins):\n\n| Horizon ($h$) | Scored Days | Last Observed Price (Baseline) MAE | Direct Ridge MAE | Serving Recursive Pipeline MAE | Winner |\n|---|---:|---:|---:|---:|:---:|\n| **Day 1** | 31 | **\u20b938.71/qtl** | \u20b992.62/qtl | \u20b9242.53/qtl | **Baseline** |\n| **Day 2** | 30 | **\u20b952.17/qtl** | \u20b9172.44/qtl | \u20b9353.05/qtl | **Baseline** |\n| **Day 3** | 30 | **\u20b9100.00/qtl** | \u20b9189.20/qtl | \u20b9456.47/qtl | **Baseline** |\n| **Day 4** | 30 | **\u20b9172.22/qtl** | \u20b9223.73/qtl | \u20b9693.77/qtl | **Baseline** |\n| **Day 5** | 30 | **\u20b9170.00/qtl** | \u20b9235.67/qtl | \u20b9870.27/qtl | **Baseline** |\n| **Day 6** | 29 | **\u20b9188.46/qtl** | \u20b9253.23/qtl | \u20b9977.16/qtl | **Baseline** |\n| **Day 7** | 30 | **\u20b9213.33/qtl** | \u20b9271.82/qtl | \u20b91,131.32/qtl | **Baseline** |\n\n> [!IMPORTANT]\n> **Key Technical Finding**: The naive persistence baseline outperforms both the direct Ridge and recursive serving ML models across every single horizon ($h=1$ through $h=7$).\n> - **Error Compounding in Recursive Inference**: In recursive forecasting, day $t+1$ predictions feed into day $t+2$ lag features, compounding prediction bias over longer horizons (MAE grows from \u20b9242 to \u20b91,131/qtl).\n> - **Agricultural Market Efficiency**: Non-shock agricultural mandi prices behave as near-martingales (random walks with drift). The spot price $y_t$ contains virtually all available short-term price information. Defending this empirical result honestly demonstrates mature machine learning judgment over blind model advocacy.\n\n#### Targeted Data Leakage Regression Check:\nA regression test (`verify_zero_data_leakage` in `scripts/backtest.py`) was implemented:\n- A forecast cutoff $T$ was fixed.\n- Historical data after cutoff $T$ was mutated by injecting extreme synthetic values (prices set to \u20b999,999/qtl and arrivals set to 5,000,000 MT).\n- Forecasts generated at cutoff $T$ before and after data corruption were compared across all 7 horizons.\n- **Result**: Maximum absolute difference was strictly **`0.00000000`**, proving zero lookahead bias or future data leakage in feature engineering, rolling windows, or inference.\n\n### 3. Dual Database Architecture & Offline Autonomy\n- **Production Supabase PostgreSQL**: Configured with transaction pooling for cloud web serving.\n- **Embedded Local DuckDB Engine (`mirchimandi.duckdb`)**: Fully autonomous offline database containing **29,744 stored deduplicated records** across 10 varieties and 120 model benchmarks.\n  - **Local CSVs**: 1,432 verified rows across 6 files (2025-11-07 to 2026-07-10).\n  - **Google Sheets API**: 28,312 historical grade-specific records.\n- **Offline vs. Online Capability Boundaries**:\n  - *Autonomous Offline Features*: Today's prices, historical charts, transport estimation, 7-day ML inference, broker arbitrage calculator, and crowdsourced submissions.\n  - *Network-Dependent Features*: Live Agmarknet government portal scraper, Google Sheets real-time sync, and external Nominatim geocoding.\n\n### 4. Frontend Technology Stack\n- **Framework**: React 18 + Vite.\n- **3D Graphics**: Three.js procedural organic mesh generator with Catmull-Rom spline curves, Frenet-Serret normal extrusion, and PBR clearcoat materials.\n- **Styling**: Tailwind CSS with custom cyberpunk/agritech typography (`Space Grotesk`, `Orbitron`, `Noto Sans Telugu`).\n- **Icons**: Lucide React.\n\n---\n\n## 6. Summary of Impact\n\n| Metric | Without MirchiMandi | With MirchiMandi |\n|---|---|---|\n| **Market Transparency** | None (Relies on broker word) | Real-time prices across 10 commercial cultivars |\n| **Price Gap Risk** | Loss of \u20b91,500 \u2013 \u20b93,500/quintal | Full knowledge of prevailing Guntur modal rates |\n| **Transport Decision** | Guesswork on vehicle cost vs profit | Exact \u20b9 calculation factoring vehicle, distance & labor |\n| **Holding Strategy** | Emotion/rumor based | Algorithmic 7-day forecast factoring holding fees |\n| **Language Accessibility** | English-only government PDFs | 100% bilingual Telugu & English native interface |\n\n---\n\n## 7. Claim-by-Claim Technical Audit Defense Table\n\n| Claim / Metric | Initial Unverified Claim | Audited & Verified Value | Interview Defense & Explanation |\n|---|---|---|---|\n| **Model Count** | \"11 ML models\" | **12 ML Models + 1 Baseline** | 12 distinct ML algorithms trained across 10 varieties = 120 benchmarks. PyTorch MLP was added to the training pipeline; docstring was updated. Persistence baseline tracked separately. |\n| **Model Accuracy** | \"\u20b9661 MAE / 3.9% error\" | **\u20b9661.32/qtl MAE (3.88% MAPE)** | Specifically applies to `Red New` using Lasso Regression on a 1-step-ahead (1-day) holdout test set (23 test days, reference mean \u20b917,043/qtl). |\n| **7-Day Forecast Winner** | Assumed ML model wins | **Last Observed Price Baseline Wins** | Naive persistence baseline achieves lower MAE at all 7 horizons (Day 1: \u20b938.71 vs \u20b9242.53; Day 7: \u20b9213.33 vs \u20b91,131.32/qtl) due to error compounding on market random walks. |\n| **Data Leakage** | Unverified | **Zero Data Leakage (0.00000000)** | Verified via targeted regression test mutating future prices to \u20b999,999/qtl and arrivals to 5,000,000 MT; zero divergence at forecast cutoff. |\n| **Transport Costs** | Fixed numbers | **Transparent Route Estimates** | Explicitly labeled as estimates in EN/TE. Haversine \u00d7 1.47 rural road factor vs pincode prefix fallback. Vehicle base fares + per-km rates + Hamali \u20b940/qtl. Return trip excluded. |\n| **Outlier Handling** | 400 Bad Request rejection | **Quarantine Review Pipeline** | Like-for-like comparison against market/variety/grade. Prices > \u00b125% are flagged and quarantined from public aggregates until admin verification. |\n| **Offline Capability** | General claim | **Local DuckDB Autonomy** | Local DuckDB + serialized model artifacts enable full offline inference. Daily scraping and external geocoding require internet connectivity. |\n| **Stored Records** | \"29,740+ records\" | **29,744 Deduplicated Records** | 1,432 local validated records (6 CSVs) + 28,312 Google Sheets records across 10 AP varieties. |\n\n---\n\n## 8. Reproduction Commands\n\nTo independently reproduce and audit every technical claim in this report:\n\n```bash\n# 1. Audit local data files, database records, and all 120 model benchmarks:\npython scripts/audit_data.py\n\n# 2. Run the 7-day multi-step forecast backtest, baseline comparison, and zero-leakage regression check:\npython scripts/backtest.py --variety \"Red New\"\n\n# 3. Retrain all 12 ML models and generate updated evaluation summaries:\npython scripts/02_train_models.py\n\n# 4. Verify backend health and audit statistics via API:\ncurl http://127.0.0.1:8000/api/health\ncurl http://127.0.0.1:8000/api/audit/stats\n```\n\n---\n\n*MirchiMandi: Empowering Indian Chilli Farmers with Data Transparency and Actionable AI.*\n";
+    
+    marked.setOptions({
+      breaks: true,
+      gfm: true
+    });
+
+    const html = marked.parse(rawMarkdown);
+    document.getElementById('content').innerHTML = html;
+
+    // Render mermaid diagrams
+    document.querySelectorAll('pre code.language-mermaid').forEach((el) => {
+      const pre = el.parentElement;
+      const graphDef = el.textContent;
+      const mermaidDiv = document.createElement('div');
+      mermaidDiv.className = 'mermaid';
+      mermaidDiv.textContent = graphDef;
+      pre.parentElement.replaceChild(mermaidDiv, pre);
+    });
+
+    mermaid.run();
+  </script>
+</body>
+</html>
