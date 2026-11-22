@@ -4,6 +4,8 @@ Real-time Mirchi Price Intelligence for Andhra Pradesh farmers.
 
 **Live demo:** [MirchiMandi on Render](https://mirchimandi.onrender.com/)
 
+With PostgreSQL configured, the API refreshes the Guntur Mirchi Sheets feed at startup and every 30 minutes while running. The price card checks again while the dashboard is open. A quote is labeled **Today's Price** only when its reported date matches the current date in India. On market closures or for varieties absent from the Sheets feed, the dashboard shows the latest available quote and its actual date. AGMARKNET-only varieties still depend on a recent AGMARKNET import.
+
 ## Project Structure
 
 ```

@@ -95,17 +95,35 @@ const T = {
 };
 
 // ─── HOOKS ─────────────────────────────────────────────
-function useFetch(path, deps = []) {
+function useFetch(path, deps = [], refreshMs = 0) {
   const [data, setData]     = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState(null);
   useEffect(() => {
     if (!path) return;
     setLoading(true);
-    fetch(`${API}${path}`)
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
-      .catch(e => { setError(e.message); setLoading(false); });
+    setError(null);
+    const controller = new AbortController();
+    let inFlight = false;
+    async function load() {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const response = await fetch(`${API}${path}`, { signal: controller.signal, cache: refreshMs ? "no-store" : "default" });
+        const result = await response.json();
+        if (!controller.signal.aborted) { setData(result); setError(null); }
+      } catch (failure) {
+        if (!controller.signal.aborted) setError(failure.message);
+      } finally {
+        inFlight = false;
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+    load();
+    const interval = refreshMs ? setInterval(() => {
+      if (!document.hidden) load();
+    }, refreshMs) : null;
+    return () => { controller.abort(); clearInterval(interval); };
   }, deps);
   return { data, loading, error };
 }
@@ -203,7 +221,7 @@ function LangSelect({ onSelect }) {
 function TodayPriceCard({ variety, market, t, lang }) {
   const { data, loading } = useFetch(
     `/api/price/today?market=${encodeURIComponent(market)}&variety=${encodeURIComponent(variety)}`,
-    [variety, market]
+    [variety, market], 30000
   );
 
   if (loading) {
@@ -217,7 +235,7 @@ function TodayPriceCard({ variety, market, t, lang }) {
     );
   }
 
-  if (!data) {
+  if (!data?.date || data.variety !== variety || data.market !== market) {
     return (
       <Card className="min-h-[250px] flex items-center justify-center text-center">
         <p className="text-slate-500">No market data reported for this variety in {market} today.</p>
@@ -225,19 +243,13 @@ function TodayPriceCard({ variety, market, t, lang }) {
     );
   }
 
-  // Detect if the price is outdated (older than 2 days)
-  const priceDate = new Date(data.date);
-  const todayDate = new Date();
-  priceDate.setHours(0,0,0,0);
-  todayDate.setHours(0,0,0,0);
-  const diffTime = Math.abs(todayDate - priceDate);
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const dateParts = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const { year, month, day } = Object.fromEntries(dateParts.map(({ type, value }) => [type, value]));
+  const today = `${year}-${month}-${day}`;
+  const diffDays = Math.floor((Date.parse(today) - Date.parse(data.date)) / 86400000);
   const isOutdated = diffDays > 2;
-
-  const cardTitle = isOutdated ? (t.latest_price || "Latest Available Price") : t.today;
-  const subtitle = isOutdated 
-    ? (t.outdated_warning ? t.outdated_warning(data.date) : `⚠️ Showing price from ${data.date}`)
-    : (lang === "te" ? `నేటి ${market} ధర` : `Today's ${market} Price`);
+  const cardTitle = data.date === today ? t.today : t.latest_price;
+  const subtitle = lang === "te" ? `ధర నమోదైన తేదీ ${data.date}` : `Reported on ${data.date}`;
 
   return (
     <Card 
@@ -702,7 +714,7 @@ function CalculatorCard({ variety, market, t }) {
 function AllVarietiesCard({ market, t }) {
   const { data, loading } = useFetch(
     `/api/varieties/today?market=${encodeURIComponent(market)}`,
-    [market]
+    [market], 30000
   );
 
   if (loading) {
@@ -1340,7 +1352,7 @@ export default function App() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981] glow-dot-green"></span>
             </span>
-            <span className="text-[10px] font-cyber font-extrabold text-[#10B981] uppercase tracking-widest">LIVE Mandi Feeds</span>
+            <span className="text-[10px] font-cyber font-extrabold text-[#10B981] uppercase tracking-widest">{lang === "te" ? "మండీ ధరలు" : "Mandi Reports"}</span>
           </div>
 
           <div className="h-4 w-px bg-slate-800 flex-shrink-0" />

@@ -9,6 +9,8 @@ All API endpoints for MirchiMandi website.
 from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+import asyncio
+import logging
 from pydantic import BaseModel, Field
 from typing import Optional
 from pathlib import Path
@@ -117,6 +119,35 @@ except (psycopg2.Error, RuntimeError) as error:
 
 def get_conn():
     return psycopg2.connect(DB_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+
+async def refresh_market_prices():
+    from daily_auto_sync import sync_variety_prices
+
+    while True:
+        try:
+            await asyncio.to_thread(sync_variety_prices)
+        except Exception as error:
+            # Upstream request errors may contain the request URL and credential.
+            logging.getLogger(__name__).warning("Market price refresh failed (%s)", type(error).__name__)
+        await asyncio.sleep(1800)
+
+
+@app.on_event("startup")
+async def start_price_refresh():
+    if DB_URL and not USE_LOCAL_DB:
+        app.state.price_refresh = asyncio.create_task(refresh_market_prices())
+
+
+@app.on_event("shutdown")
+async def stop_price_refresh():
+    task = getattr(app.state, "price_refresh", None)
+    if task:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
 
 def query(sql, params=None):
     if not USE_LOCAL_DB:

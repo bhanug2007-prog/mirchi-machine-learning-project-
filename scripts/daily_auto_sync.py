@@ -12,7 +12,8 @@ Can be triggered from a server cron job or backend admin panel.
 import requests
 import psycopg2
 from psycopg2.extras import execute_values
-from datetime import datetime, date
+from datetime import datetime, timedelta, timezone
+from math import isfinite
 import os
 import sys
 
@@ -21,14 +22,15 @@ SPREADSHEET_ID = '1dwhlEIQ_H0NcAIT-SSg1sM_ZpsT2KZNUvc2fqWI9lYU'
 API_KEY = 'AIzaSyBshQgbcousVir0__rUic0Bj1Ei6XYuKrE'
 
 def get_conn():
-    return psycopg2.connect(DB_URL)
+    return psycopg2.connect(DB_URL, connect_timeout=8)
 
 def clean_price(val):
     try:
         if not val or str(val).strip() in ['-', '—', '']:
             return None
-        return float(str(val).replace(",", "").strip())
-    except Exception:
+        price = float(str(val).replace(",", "").strip())
+        return price if isfinite(price) and price > 0 else None
+    except (TypeError, ValueError):
         return None
 
 def parse_date(date_str):
@@ -39,6 +41,15 @@ def parse_date(date_str):
             pass
     return None
 
+
+def recent_dated_rows(rows, today, limit=15):
+    dated = []
+    for row in rows:
+        day = parse_date(str(row[0]).strip()) if row else None
+        if day is not None and day <= today:
+            dated.append((day, row))
+    return sorted(dated, key=lambda item: item[0])[-limit:]
+
 def sync_variety_prices():
     print("Fetching latest prices from Guntur Mirchi Sheets API...")
     url = f"https://content-sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values:batchGet?ranges=Consolidated%20Prices&ranges=Fatki%20Table&majorDimension=ROWS&key={API_KEY}"
@@ -48,15 +59,21 @@ def sync_variety_prices():
         'Origin': 'https://gunturmirchi.in'
     }
     
-    r = requests.get(url, headers=headers, timeout=15)
+    try:
+        r = requests.get(url, headers=headers, timeout=15)
+    except requests.RequestException as error:
+        print(f"[ERROR] Price feed request failed ({type(error).__name__}).")
+        return False
     if r.status_code != 200:
         print(f"[ERROR] Failed to fetch sheets data: HTTP {r.status_code}")
         return False
         
     data = r.json()
-    valueRanges = data.get('valueRanges', [])
-    consolidated_rows = valueRanges[0].get('values', [])
-    fatki_rows = valueRanges[1].get('values', [])
+    ranges = {item["range"].split("!", 1)[0].strip("'"): item.get("values", [])
+              for item in data.get("valueRanges", [])}
+    consolidated_rows = ranges.get("Consolidated Prices", [])
+    fatki_rows = ranges.get("Fatki Table", [])
+    today = datetime.now(timezone(timedelta(hours=5, minutes=30))).date()
     
     records = []
     
@@ -90,14 +107,7 @@ def sync_variety_prices():
     
     # We only take the last 15 rows for the daily update to keep it lightweight,
     # but still cover weekends, holidays, and past week updates.
-    recent_rows = [consolidated_rows[0]] + consolidated_rows[-15:]
-    
-    for row in recent_rows[1:]:
-        if not row or not row[0]:
-            continue
-        arrival_date = parse_date(row[0])
-        if not arrival_date:
-            continue
+    for arrival_date, row in recent_dated_rows(consolidated_rows, today):
             
         for col_idx, (variety, grade) in consolidated_map.items():
             if col_idx < len(row):
@@ -119,13 +129,7 @@ def sync_variety_prices():
         6: ("Seed Variety Fatki", "Best")
     }
     
-    recent_fatki = [fatki_rows[0]] + fatki_rows[-15:]
-    for row in recent_fatki[1:]:
-        if not row or not row[0]:
-            continue
-        arrival_date = parse_date(row[0])
-        if not arrival_date:
-            continue
+    for arrival_date, row in recent_dated_rows(fatki_rows, today):
             
         for col_idx, (variety, grade) in fatki_map.items():
             if col_idx < len(row):
@@ -138,8 +142,11 @@ def sync_variety_prices():
                     ))
                     
     if not records:
-        print("No new prices to save today.")
-        return True
+        print("[ERROR] The feed returned no usable dated quotes.")
+        return False
+
+    # Revisions can repeat a date and grade within a batch.
+    records = list({(row[0], row[3], row[6], row[7]): row for row in records}.values())
         
     print(f"Uploading {len(records)} daily sync records to Supabase...")
     conn = get_conn()
@@ -160,11 +167,12 @@ def sync_variety_prices():
     try:
         execute_values(cur, query, records)
         conn.commit()
-        print(f"[OK] Successfully synched {len(records)} variety records in Supabase.")
+        latest = max(row[0] for row in records)
+        print(f"[OK] Synced {len(records)} variety records. Latest upstream quote date: {latest}.")
         return True
-    except Exception as e:
+    except psycopg2.Error:
         conn.rollback()
-        print(f"[ERROR] Database sync failed: {e}")
+        print("[ERROR] Database rejected the price sync.")
         return False
     finally:
         cur.close()
@@ -177,3 +185,4 @@ if __name__ == "__main__":
         print("Daily sync completed successfully!")
     else:
         print("Daily sync completed with errors.")
+        sys.exit(1)
