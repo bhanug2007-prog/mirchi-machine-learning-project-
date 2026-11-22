@@ -1,152 +1,112 @@
 # MirchiMandi
 
-**A full-stack machine learning project that helps Andhra Pradesh chilli farmers compare where and when to sell their harvest**
+MirchiMandi helps Andhra Pradesh chilli farmers compare where and when to sell their harvest. It combines mandi price data, machine learning forecasts, and an English and Telugu dashboard that calculates the proceeds farmers could take home.
 
-**Live demo:** [MirchiMandi on Render](https://mirchimandi.onrender.com/)
+**[Live demo on Render](https://mirchimandi.onrender.com/)** · **[Latest application source](https://github.com/bhanug2007-prog/mirchi-machine-learning-project-/tree/render-deploy)**
 
-A farmer with 50 quintals of red chilli can take a village broker's offer, pay to transport the crop to a mandi, or pay for cold storage and sell later. The highest quoted price may leave the farmer with less money once those costs are included.
+Growing up in an agricultural family in Andhra Pradesh, I watched my father and neighboring farmers confront a stressful decision after every harvest. A farmer with 50 quintals of red chilli can take a village broker's offer, pay to transport the crop to a mandi, or pay for cold storage and wait. Seeing their hard work undercut by unclear prices, transport risks, and unexpected storage fees inspired me to build MirchiMandi.
 
-I built MirchiMandi to make that comparison concrete. A Python pipeline imports variety-level price records from a Guntur Mirchi spreadsheet and AGMARKNET reports into PostgreSQL. I compared 12 regression models on a chronological holdout and saved the best-performing model by mean absolute error for each trained variety. FastAPI serves the latest recorded prices and seven-day estimates to an English and Telugu React dashboard, where farmers can compare **broker proceeds with mandi proceeds after transport** and **potential gains from waiting after storage costs**.
+## What the app does
 
-**Project status:** The repository contains a React frontend, a FastAPI backend, ingestion and training scripts, Andhra Pradesh price reports, and saved model artifacts. Field adoption has not been verified.
-
-## Table of Contents
-
-- [Project Overview](#project-overview)
-- [Problem Statement](#problem-statement)
-- [Proposed Solution](#proposed-solution)
-- [Key Features and User Roles](#key-features-and-user-roles)
-- [Demonstration Flow](#demonstration-flow)
-- [Architecture](#architecture)
-- [Technology Stack](#technology-stack)
-- [Machine Learning: Price Forecasting and Model Selection](#machine-learning-price-forecasting-and-model-selection)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Validation and Testing](#validation-and-testing)
-- [Deployment Notes](#deployment-notes)
-- [Known Limitations and Roadmap](#known-limitations-and-roadmap)
-
-## Project Overview
-
-The project connects agricultural data ingestion and machine learning to a decision a farmer can make after harvest. The pipeline collects variety-level prices, stores them in PostgreSQL, compares forecasting models, and serves prices and estimates through a dashboard. The calculator translates per-quintal quotes into estimated totals for the farmer's actual quantity.
-
-## Problem Statement
-
-A small farmer might harvest around 50 quintals of mirchi from a two-acre plot. A village broker can buy the crop locally, but the offer may be below the price quoted at a larger market such as Guntur. Selling at the mandi adds a transport cost. A nearby cold store gives the farmer more time, but each day of storage adds a charge and the future selling price is uncertain.
-
-A higher mandi quote can still leave the farmer with less money after transport. Similarly, a forecast price increase may be too small to cover storage. The farmer needs a way to compare those costs against the price difference for the whole harvest.
-
-## Proposed Solution
-
-| Decision | What MirchiMandi calculates |
+| Feature | What you can do |
 | --- | --- |
-| Sell to the local broker | Broker offer per quintal multiplied by the quantity. |
-| Transport to the mandi | Estimated mandi proceeds after transport, compared with the broker offer. |
-| Store and wait | Estimated change in sale proceeds over the forecast horizon after the app's daily storage charge. |
+| Market prices | Find the latest reported price for a variety, check its date, and explore historical trends. |
+| Sell-or-wait comparison | Compare a broker's offer with mandi proceeds after estimated freight and Hamali fees, then account for storage if you wait. |
+| Market Assistant | Ask a question in English or Telugu. A LangGraph workflow extracts the details, asks for missing inputs, and uses the same price, forecast, and transport tools as the dashboard. |
+| Forecast uncertainty | Inspect seven-calendar-day estimates and calibrated prediction intervals where a matching evaluation is available. |
+| My Inventory | Save private harvest lots, calculate accumulated storage costs, and receive in-app alerts when a recent observed quote reaches your target. |
+| Agricultural Guidance | Find cited English or Telugu guidance on eNAM registration, payments, and dried chilli handling. |
+| Weather and arrivals | Compare price-only models with models that use lagged arrivals or archive weather under the same historical evaluation. |
+| Community reporting | Submit local prices. Unusual quotes are flagged for moderator review before they can enter verified aggregates. |
 
-The broker-versus-mandi calculator and the storage recommendation are separate tools. Together they let the farmer compare the immediate options and assess whether waiting could cover its own cost.
+### Try this in the Market Assistant
 
-## Key Features and User Roles
+> I have 60 quintals of Teja S17 chilli in Inkollu. A broker is offering ₹16,000 per quintal. Should I sell to him, take it to Guntur mandi, or wait seven days?
 
-| Role | What you can do |
-| --- | --- |
-| **Farmer or dashboard visitor** | Select a market and variety, view the latest recorded quote and price history, compare markets, inspect a seven-day forecast, and estimate the effect of transport or storage. Switch between English and Telugu. |
-| **Community contributor** | Submit a local variety price and upvote reports. Community prices are a separate source from ingested market records. |
-| **Administrator** | Use the passcode-protected dashboard to review, verify, or remove submissions and trigger a price sync. |
-
-The price and model views include varieties such as Teja S17, 334 Sannam, Byadgi, 341, DD Deluxe, and Armoor, depending on available data. The dashboard also shows recorded model comparison metrics for supported varieties.
-
-## Demonstration Flow
-
-1. Open the dashboard and select **Guntur APMC** and a variety with price records, such as **Teja S17**.
-2. Read the latest quote and its date, then open the history and seven-day forecast.
-3. Enter **50 quintals**, a sample broker quote, the origin and destination, and a vehicle type. Compare the estimated mandi proceeds after transport with the broker proceeds.
-4. Check the sell-or-wait recommendation for the same quantity. Read the estimated price gain and storage cost behind the recommendation.
-5. Explore the community price form or the model comparison view to see how price reports and forecasting results are presented.
+The broker offer totals ₹9,60,000 before any farmer-supplied costs. The assistant uses dated quotes and forecasts to estimate the other options and itemizes transport and storage. If evidence is missing or stale, it labels the affected comparison accordingly. The free Render configuration can use rule-based parsing with the app's market tools.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    Sheet["Guntur Mirchi price spreadsheet"] --> Sync["Python Sheets sync"]
-    CSV["AGMARKNET price and arrival CSVs"] --> Import["CSV import"]
-    Sync --> DB[("Supabase PostgreSQL")]
-    Import --> DB
-    DB --> Train["Feature engineering and model comparison"]
-    Train --> Models["Saved models, feature lists and metrics"]
-    Models --> API["FastAPI"]
-    DB <--> API
-    API --> Costs["Transport and storage estimates"]
-    API <--> UI["React dashboard · English and Telugu"]
+- **Data:** Guntur Mirchi Google Sheets for variety-level updates, AGMARKNET reports for historical mandi data, and Open-Meteo ERA5 for the weather experiment.
+- **Backend:** FastAPI, Pydantic, LangGraph, and Python functions for financial calculations. Production connects to PostgreSQL through Supabase. Local price lookups can use a populated DuckDB snapshot, with SQLite for local portfolio accounts and inventory.
+- **ML:** scikit-learn, XGBoost, LightGBM, PyTorch, pandas, and NumPy.
+- **Frontend:** React, Vite, and Tailwind CSS, with English and Telugu support.
+- **Deployment:** Docker and Render. The deployment configuration also supports a separate static frontend so the landing page can load independently of a cold API.
+
+## Forecasting and evaluation
+
+The saved benchmark contains **120 model–variety evaluations** across 12 regression architectures and 10 chilli varieties. Saved one-step holdout MAE includes Teja S17 Lasso at ₹158.41/quintal, Red XGBoost at ₹466.71/quintal, and Red New Lasso at ₹661.32/quintal. These are from a separate evaluation from the rolling, multi-horizon results below.
+
+### Seven-day forecast for Guntur APMC Red New, FAQ grade
+
+The chronological experiment used 70 quote dates for model selection, 35 for interval calibration, and 36 for holdout evaluation. Each horizon was scored only when an actual quote existed on its target date.
+
+| Calendar-day horizon | Scored dates | Last-price MAE (₹/quintal) | Recursive Lasso MAE (₹/quintal) | Observed interval coverage |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 28 | 42.86 | 232.12 | 89.3% |
+| 2 | 20 | 60.00 | 373.48 | 100% |
+| 3 | 16 | 125.00 | 469.80 | 100% |
+| 4 | 14 | 221.43 | 734.81 | 100% |
+| 5 | 16 | 212.50 | 814.65 | 100% |
+| 6 | 22 | 222.73 | 856.93 | 100% |
+| 7 | 24 | 245.83 | 1,044.00 | 100% |
+
+Last price had the lowest MAE at all seven horizons for this series. The API uses this baseline when the market, variety, and grade match the calibration. The interval target is 80%. Coverage above is historical and sample sizes are small. The day-one margin was zero in this calibration, so it shows how concentrated those residuals were. Future prices can still move.
+
+### Historical selling decisions
+
+The timing simulation compared three rules on 22 common scorable dates, using ₹30 per quintal per day in storage costs and a ₹200 per quintal minimum projected gain for the selective rule.
+
+| Strategy | Average realized gain vs. immediate sale (₹/quintal) | Combined simulated gain across dates (50 quintals per date) |
+| --- | ---: | ---: |
+| Sell immediately | 0.00 | ₹0 |
+| Always wait seven days | −228.18 | −₹2,51,000 |
+| Selective recursive Lasso rule | +32.27 | +₹35,500 |
+
+These are historical simulations. The selective rule used a refitted recursive Lasso candidate, while the calibrated Red New forecast uses the last-price baseline. The weather and arrivals experiment also found that last price had the lowest MAE across all seven horizons for both Red New and Red. The added signals remain experimental.
+
+## Run locally
+
+Use Python 3.11 and Node.js 22 to match the deployment. The latest app and its setup files are on `render-deploy`.
+
+```bash
+git clone --branch render-deploy https://github.com/bhanug2007-prog/mirchi-machine-learning-project-.git
+cd mirchi-machine-learning-project-
+python -m venv .venv
+# Activate .venv, then install the backend dependencies.
+python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+python -m pip install -r backend/requirements.txt
 ```
 
-The backend reads price records and saved model artifacts, builds forecasts, and applies cost rules. The frontend displays the results and sends calculator inputs and community submissions through the API.
+Set `DB_URL` for a populated PostgreSQL database, or provide a populated `backend/mirchimandi.duckdb` snapshot. The local DuckDB file is ignored by Git. The deployment branch README documents the data setup and synchronization scripts.
 
-## Technology Stack
+Start the backend with `python -m uvicorn backend.main:app --reload --port 8000`. Set `ASSISTANT_RULE_MODE=1` in the backend environment for keyless parsing. In a separate terminal, run the frontend from the project root.
 
-| Layer | Technology | Purpose |
-| --- | --- | --- |
-| Frontend | React, Vite, Tailwind CSS | Bilingual dashboard, forecast views, calculators, and admin screens |
-| API and persistence | FastAPI, Uvicorn, psycopg2, Supabase PostgreSQL | Price queries, forecasts, recommendations, and moderation |
-| Data processing | Python, Requests, pandas, NumPy | Spreadsheet synchronization, CSV ingestion, and feature engineering |
-| Machine learning | scikit-learn, XGBoost, LightGBM, PyTorch, joblib | Regression experiments, model selection, and saved inference artifacts |
-| Location lookup | OpenStreetMap Nominatim and a distance fallback | Estimates used by the transport calculator |
-
-## Machine Learning: Price Forecasting and Model Selection
-
-### What ML predicts and why it matters
-
-The model predicts **red-chilli prices in rupees per quintal** from historical market data. Today's quote is enough to compare a broker offer with a mandi sale after transport. Deciding whether to **pay for storage and sell later** requires an estimate of future prices. That is where ML helps.
-
-### How I built and evaluated the models
-
-1. **Collect the price history.** Import variety-level prices from a Guntur Mirchi spreadsheet and AGMARKNET price and arrival reports into PostgreSQL.
-2. **Build features from past observations.** Use lagged prices, rolling price statistics, recent price changes, calendar features, and lagged market arrivals where available.
-3. **Compare 12 regressors on later dates.** Train on the earliest 80% of observations and evaluate on the final 20% without shuffling. Candidates include Linear Regression, Ridge, Lasso, Decision Tree, KNN, SVR, Random Forest, Extra Trees, Gradient Boosting, XGBoost, LightGBM, and a PyTorch multilayer perceptron (MLP).
-4. **Select by variety.** Save the model with the lowest mean absolute error (MAE) for each trained variety, along with its feature list and evaluation metadata. The saved results also include RMSE, R², and MAPE.
-
-| Variety | Selected model in the saved run | Holdout MAE |
-| --- | --- | --- |
-| Teja S17 | Lasso Regression | ₹158.41 per quintal |
-| Red | XGBoost | ₹466.71 per quintal |
-
-The selected model varied by chilli variety. The PyTorch MLP was evaluated alongside the classical models. These results describe the historical holdout used for model selection and do not establish seven-day forecast accuracy. [Training code](scripts/02_train_models.py) · [Teja S17 results](saved_models/meta_Teja_S17.json) · [Red results](saved_models/meta_Red.json)
-
-### How the forecast becomes a recommendation
-
-FastAPI loads the model for the selected variety and serves a **seven-day price forecast** to the English and Telugu React dashboard. It can use a moving average when a trained model is unavailable and price history is available. The sell-or-wait calculation subtracts storage costs from the projected change in sale proceeds.
-
-For example, a projected rise of **₹100 per quintal after four days** would fall short of the app's assumed **₹120 per quintal storage cost** for those four days. For **50 quintals**, waiting would leave the farmer an estimated **₹1,000 worse off** than selling at the current price. The forecast supplies the future price estimate, and the cost calculation explains the recommendation.
-
-## Project Structure
-
-```text
-backend/                    FastAPI endpoints and Python requirements
-frontend/                   React dashboard, Vite config, and npm lockfile
-csv_data/                   Andhra Pradesh market price and arrival reports
-saved_models/               Model artifacts, feature lists, and evaluation metadata
-scripts/                    Sheets sync, CSV import, model training, and daily sync
-scratch/check_predictions.py  Local forecast diagnostic
+```bash
+npm --prefix frontend ci
+npm --prefix frontend run dev
 ```
 
-## Getting Started
+**[Local dashboard](http://localhost:5173/)** · **[Local API docs](http://localhost:8000/docs)**
 
-1. Clone the repository and create an isolated Python environment. Install the [backend requirements](backend/requirements.txt). If you plan to rerun ingestion and training, install Requests and PyTorch in that environment as well.
-2. Configure a PostgreSQL database you control. The current backend and ingestion and training scripts read a `DB_URL` constant in source. Configure a local working copy with your own connection settings and keep credentials out of Git.
-3. From the repository root, run [the CSV importer](scripts/01_upload_to_supabase.py) to initialize and populate the market tables with the included reports. Run [the Sheets sync](scripts/01_sync_google_sheets.py) to add spreadsheet prices if the source is reachable. To retrain, run `python scripts/02_train_models.py` from the root.
-4. From `backend/`, start the API with `uvicorn main:app --reload --port 8000`. Open [Swagger UI](http://localhost:8000/docs) to inspect the endpoints. Starting from this directory lets the backend locate `../saved_models`.
-5. In a separate terminal, open `frontend/`, run `npm ci`, and start it with `npm run dev`. Set `VITE_API_URL=http://localhost:8000` in `frontend/.env` if you want to configure the endpoint explicitly. Open [the local dashboard](http://localhost:5173).
+## Reproduce the analysis
 
-## Validation and Testing
+From the project root, install `pytest` and `httpx` in the development environment before running the test suite.
 
-Reproduce the model comparison with the [training script](scripts/02_train_models.py) and inspect the [saved model metadata](saved_models/). Use the [forecast diagnostic](scratch/check_predictions.py) or the API docs to check price history and inference. For a manual end-to-end check, compare a broker quote with the mandi estimate, then increase the transport cost or change the vehicle to see how the estimated advantage changes. An automated end-to-end suite and a field trial are not documented in this repository.
+```bash
+python scripts/backtest.py --variety "Red New"
+python scripts/backtest.py --verify-no-leakage
+python scripts/market_signals.py
+python scripts/market_signals.py --variety Red
+python -m pytest tests -q
+npm --prefix frontend run build
+```
 
-## Deployment Notes
+The leakage check mutates future price and arrival records and checks that the tested cutoff's outputs stay unchanged. Forecast and calibration artifacts live in `saved_models/`. The backend modules are under `backend/`, the dashboard is under `frontend/`, and the evaluation and ingestion entry points are under `scripts/`.
 
-The intended split is a Vite frontend on Vercel, FastAPI on Render, and PostgreSQL on Supabase. The frontend needs the deployed API URL in `VITE_API_URL`. The backend needs access to its database and saved model artifacts. Move inline database credentials and admin settings to server-side environment variables before publishing a service. The daily sync script requires an external scheduler to run automatically.
+## Limitations
 
-## Known Limitations and Roadmap
-
-- Market prices are only as current as the source records and the last successful sync. Check the quote date before using an estimate.
-- Transport costs are estimates. The wait recommendation uses a fixed storage assumption of ₹30 per quintal per day. Actual transport quotes, storage fees, and market terms can change the comparison.
-- The next steps are to make storage fees configurable, show data freshness more clearly, evaluate forecasts across different dates and markets, and deploy a first pilot for feedback from farmers.
+- **Market freshness.** Today’s label requires a quote dated today in India. Markets can close or publish late. Varieties outside the Guntur Sheets feed depend on a recent AGMARKNET import.
+- **Costs.** Transport uses distance and vehicle-rate estimates rather than carrier quotes. The base sell-or-wait rule uses ₹30/quintal/day for storage, while portfolio lots accept a custom rate.
+- **Guidance scope.** The library covers general eNAM and dried chilli guidance. Local yard requirements and cultivar-specific storage settings need separate verification.
+- **Free hosting.** The API can sleep when idle, so market data may take longer on the first visit.
